@@ -1,0 +1,32 @@
+[
+  {
+    "command": "set STOCKSELECTOR_NO_PAUSE=1 && call scripts\\project_status.bat",
+    "exit_code": 0,
+    "result": "通过；非交互模式未执行 pause，正确显示 partial_failed 状态。"
+  },
+  {
+    "command": "set STOCKSELECTOR_NO_PAUSE=1 && call scripts\\validate_memory.bat",
+    "exit_code": 0,
+    "result": "通过；Agent-Memory 校验 PASS，FAIL 0，WARNING 0。"
+  },
+  {
+    "command": "set STOCKSELECTOR_NO_PAUSE=1 && call scripts\\build_gpt_context.bat",
+    "exit_code": 0,
+    "result": "通过；已生成 GPT_CONTEXT.md。"
+  },
+  {
+    "command": "python scripts\\project_status.py",
+    "exit_code": 0,
+    "result": "通过；正确显示 partial_failed 用户验证状态。"
+  },
+  {
+    "command": "python scripts\\validate_memory.py",
+    "exit_code": 0,
+    "result": "通过；Agent-Memory 校验 PASS，FAIL 0，WARNING 0。"
+  },
+  {
+    "command": "python -m unittest discover -s tests -v",
+    "exit_code": 0,
+    "result": "通过；13 项测试全部 OK，包含 BAT 辅助入口内容检查。"
+  }
+]

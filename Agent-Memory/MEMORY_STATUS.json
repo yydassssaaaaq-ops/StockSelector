@@ -1,0 +1,28 @@
+{
+  "schema_version": "4.1",
+  "project": "StockSelector",
+  "project_name_zh": "A股智能选股系统",
+  "current_task": "TASK-20260612-001",
+  "current_round": "ROUND-002",
+  "latest_checkpoint": null,
+  "execution_status": "waiting_github_sync",
+  "verification_level": "L4_USER_VERIFIED",
+  "user_verification": "passed",
+  "branch": "main",
+  "base_commit": "a38c8ad71ce4e95dd910cad6b86d9b9392981bb4",
+  "observed_head_commit": "a38c8ad71ce4e95dd910cad6b86d9b9392981bb4",
+  "head_commit": "a38c8ad71ce4e95dd910cad6b86d9b9392981bb4",
+  "last_stable_commit": "a38c8ad71ce4e95dd910cad6b86d9b9392981bb4",
+  "workspace_clean": false,
+  "github_sync": "not_pushed",
+  "last_updated": "2026-06-13T12:57:00+08:00",
+  "open_issues": [],
+  "notes": [
+    "初始化开始前 HEAD 作为 last_stable_commit；本轮未执行 git add、commit、push、pull、merge、rebase、reset、clean，也未创建或切换分支。",
+    "ROUND-002 记录用户真实验证：Python 脚本和 unittest 通过，但 Windows BAT 双击入口失败；已修复 BAT。",
+    "用户已重新双击验证三个 BAT 辅助入口均通过；当前等待 GitHub Desktop 同步，尚未 Commit、尚未 Push，不能进入 L5_CLOSED。",
+    "observed_head_commit 表示最近一次生成状态文件时观察到的 HEAD；兼容字段 head_commit 同样只表示观察值，不再要求永远等于当前真实 HEAD。当前真实 HEAD 以 Git 动态读取为准。"
+  ],
+  "round_started_at": "2026-06-12T20:52:52+08:00",
+  "start_workspace_clean": false
+}

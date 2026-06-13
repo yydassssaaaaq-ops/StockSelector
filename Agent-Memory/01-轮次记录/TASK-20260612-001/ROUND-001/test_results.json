@@ -1,0 +1,7 @@
+﻿[
+  {"command": "python scripts/build_gpt_context.py", "exit_code": 0, "result": "通过"},
+  {"command": "python scripts/build_index.py", "exit_code": 0, "result": "通过"},
+  {"command": "python scripts/validate_memory.py", "exit_code": 0, "result": "通过；曾因占位符检查过严误报，已修正后重跑通过"},
+  {"command": "python scripts/project_status.py", "exit_code": 0, "result": "通过"},
+  {"command": "python -m unittest discover -s tests -v", "exit_code": 0, "result": "通过；11 项测试全部 OK"}
+]
