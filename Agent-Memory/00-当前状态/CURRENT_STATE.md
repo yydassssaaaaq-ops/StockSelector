@@ -14,6 +14,6 @@
 - 当前结论边界：本轮结果证明可信历史验证链路可运行，并能揭示策略未跑赢基准/简单基线；不证明策略有效、不构成投资建议、不构成交易信号。
 - 当前自动测试：`python -m unittest discover -s tests -v`，61 项通过；`tests.test_minimal_backtest` 当前 14 项通过，覆盖未来数据隔离、默认非 CSV 股票池、窗口不足、下一开盘执行、无量/涨跌停约束、现金权重和审计字段。
 - 当前限制：用户尚未真实查看本轮报告，因此验证等级保持 `L2_AGENT_TESTED`，不得标记 `L4_USER_VERIFIED` 或 `L5_CLOSED`。
-- Git 状态：本轮起始 HEAD 为 `2f1136eee9600ad056967434c74a9aca85a1a521`，起始工作区干净；当前存在本轮未提交修改，待普通 commit/push。
-- 最近稳定 commit：2f1136eee9600ad056967434c74a9aca85a1a521
+- Git 状态：本轮起始 HEAD 为 `2f1136eee9600ad056967434c74a9aca85a1a521`，起始工作区干净；本轮普通 commit `2d664de4ccf8b5882e101c173a23c0e60f3eaf73` 已推送到 `origin/main`，未使用 force push，未创建或切换分支。
+- 最近稳定 commit：2d664de4ccf8b5882e101c173a23c0e60f3eaf73
 - 下一次优先事项：建设真正 point-in-time 历史股票池；补齐行业/财务/流通市值/换手率/真实成交额历史字段；建立组合构建和风险约束层。

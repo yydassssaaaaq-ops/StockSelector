@@ -7,13 +7,13 @@
 - 项目：StockSelector / A股智能选股系统
 - 当前 TASK：TASK-20260612-001
 - 当前 ROUND：ROUND-008
-- 执行状态：waiting_commit_push
+- 执行状态：waiting_user_review
 - 验证等级：L2_AGENT_TESTED
 - 用户验证：not_run
-- GitHub 同步：not_pushed
+- GitHub 同步：pushed
 - 当前真实分支：main
-- 当前真实 HEAD：2f1136eee9600ad056967434c74a9aca85a1a521
-- 状态文件观察到的 HEAD：2f1136eee9600ad056967434c74a9aca85a1a521
+- 当前真实 HEAD：2d664de4ccf8b5882e101c173a23c0e60f3eaf73
+- 状态文件观察到的 HEAD：2d664de4ccf8b5882e101c173a23c0e60f3eaf73
 - 工作区干净：False
 
 ## B. Agent 解释
@@ -24,16 +24,16 @@
 - 任务名称：StockSelector 可信研究与历史验证系统重构
 - 当前 ROUND：ROUND-008
 - 本轮目标：把历史回测从“固定当前候选池工程样例”重构为 point-in-time、策略身份清晰、数据边界透明、可继续扩展的可信研究底座。
-- 当前状态：waiting_commit_push
+- 当前状态：waiting_user_review
 - 当前验证等级：L2_AGENT_TESTED
 - 用户验证状态：not_run
-- 当前卡点：本轮代码、文档、真实验收和自动化测试已完成；仍需按协作规则执行普通 commit 和 push，并等待用户真实查看验收。
+- 当前卡点：本轮代码、文档、真实验收、自动化测试、普通 commit 和 push 已完成；等待用户真实查看验收。
 - 已完成：实时扫描策略与历史验证策略分离；新增 `historical_ohlcv_v1` 历史 OHLCV 固定因子体系；默认股票池不再使用当天候选 CSV 或今天成交额/涨跌幅/评分过滤过去；新增下一开盘执行、无量/涨跌停近似阻断、现金权重、基线比较和完整审计报告；新增可信性测试。
 - 未完成：用户真实查看验收、真正无幸存者偏差历史股票池、历史上市/退市/停牌完整建模、行业/财务/资金流因子、正式组合构建和实盘接口。
 - 最新真实验收：`python -u scripts\run_minimal_backtest.py --start-date 2026-01-01 --end-date 2026-06-15 --top-n 5 --rebalance-frequency weekly --execution-timing next_open --transaction-cost 0.001 --slippage 0.0005 --data-source tencent --universe-source sina --universe-filter-mode broad_current_listed --universe-limit 30 --adjustment qfq --timeout 15 --retries 1` 于 2026-06-15 23:48:54 生成 `20260615_234854_minimal_backtest`。
 - 最新可查看结果：`outputs/minimal_backtest/latest.html`；摘要 JSON：`outputs/minimal_backtest/20260615_234854_minimal_backtest/summary.json`；CSV：`periods.csv`、`holdings.csv`、`failures.csv`、`universe.csv`。
 - 最新验收结论：策略累计收益 -10.72%，沪深 300 +1.25%，股票池等权基线 -3.75%，20 日趋势单因子基线 -8.70%；当前结果证明可信回测链路可运行，不证明策略有效。
-- GitHub 外循环：本轮尚未提交/推送；禁止 force push，不创建或切换分支。
+- GitHub 外循环：本轮普通 commit `2d664de4ccf8b5882e101c173a23c0e60f3eaf73` 已推送到 `origin/main`；未使用 force push，未创建或切换分支。
 
 ### 当前状态
 # CURRENT_STATE
@@ -51,14 +51,13 @@
 - 当前结论边界：本轮结果证明可信历史验证链路可运行，并能揭示策略未跑赢基准/简单基线；不证明策略有效、不构成投资建议、不构成交易信号。
 - 当前自动测试：`python -m unittest discover -s tests -v`，61 项通过；`tests.test_minimal_backtest` 当前 14 项通过，覆盖未来数据隔离、默认非 CSV 股票池、窗口不足、下一开盘执行、无量/涨跌停约束、现金权重和审计字段。
 - 当前限制：用户尚未真实查看本轮报告，因此验证等级保持 `L2_AGENT_TESTED`，不得标记 `L4_USER_VERIFIED` 或 `L5_CLOSED`。
-- Git 状态：本轮起始 HEAD 为 `2f1136eee9600ad056967434c74a9aca85a1a521`，起始工作区干净；当前存在本轮未提交修改，待普通 commit/push。
-- 最近稳定 commit：2f1136eee9600ad056967434c74a9aca85a1a521
+- Git 状态：本轮起始 HEAD 为 `2f1136eee9600ad056967434c74a9aca85a1a521`，起始工作区干净；本轮普通 commit `2d664de4ccf8b5882e101c173a23c0e60f3eaf73` 已推送到 `origin/main`，未使用 force push，未创建或切换分支。
+- 最近稳定 commit：2d664de4ccf8b5882e101c173a23c0e60f3eaf73
 - 下一次优先事项：建设真正 point-in-time 历史股票池；补齐行业/财务/流通市值/换手率/真实成交额历史字段；建立组合构建和风险约束层。
 
 ### 开放问题
 # OPEN_ISSUES
 当前开放问题：
-- GitHub 同步尚未完成：本轮修改尚未 commit/push；需在测试和记忆校验通过后执行普通 git add、commit、push，不得 force push。
 - 用户尚未真实查看 ROUND-008 报告，因此不得标记 L4_USER_VERIFIED 或 L5_CLOSED。
 非阻塞观察：
 - 默认股票池已不再使用当天候选 CSV 或今天成交额过滤过去，但仍是当前仍上市代码池过渡方案，历史退市股票和历史成分变化尚未纳入，仍存在幸存者偏差。
@@ -66,6 +65,7 @@
 - 腾讯历史源成交额由成交手数乘价格派生，换手率、主力资金和估值字段仍缺失；ROUND-008 历史策略不再使用这些实时字段伪装成同一模型。
 - 日线级涨跌停/停牌处理只是近似，不能替代逐笔盘口或真实撮合数据。
 - ROUND-007 的 18.78% 回测结果已保留为固定当前候选 CSV 下的历史工程样例，不能作为策略有效性证据。
+- ROUND-008 普通 commit `2d664de4ccf8b5882e101c173a23c0e60f3eaf73` 已推送到 `origin/main`；未使用 force push。
 
 ### 最近 ROUND
 # ROUND-008
@@ -98,30 +98,13 @@
 tracked 修改：
 - Agent-Memory/00-当前状态/CURRENT_STATE.md
 - Agent-Memory/00-当前状态/CURRENT_TASK.md
-- Agent-Memory/00-当前状态/ENVIRONMENT.md
-- Agent-Memory/00-当前状态/FILE_MAP.md
 - Agent-Memory/00-当前状态/OPEN_ISSUES.md
-- Agent-Memory/00-当前状态/PROJECT.md
-- Agent-Memory/00-当前状态/USAGE.md
-- Agent-Memory/03-GPT导出/GPT_CONTEXT.md
-- Agent-Memory/INDEX.md
-- Agent-Memory/MEMORY_STATUS.json
-- README.md
-- docs/ARCHITECTURE.md
-- docs/minimal_backtest_usage.md
-- scripts/run_minimal_backtest.py
-- src/stock_selector/backtest/README.md
-- src/stock_selector/backtest/engine.py
-- src/stock_selector/features/README.md
-- src/stock_selector/reports/backtest_report.py
-- tests/test_minimal_backtest.py
-
-未跟踪文件：
 - Agent-Memory/01-轮次记录/TASK-20260612-001/ROUND-008/ROUND.md
 - Agent-Memory/01-轮次记录/TASK-20260612-001/ROUND-008/test_results.json
-- Agent-Memory/01-轮次记录/TASK-20260612-001/ROUND-008/workspace_manifest.json
-- src/stock_selector/backtest/execution.py
-- src/stock_selector/features/historical_factors.py
+- Agent-Memory/MEMORY_STATUS.json
+
+未跟踪文件：
+- 无
 
 ## C. 用户验证
 

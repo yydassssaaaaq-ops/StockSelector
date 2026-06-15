@@ -7,21 +7,21 @@
 - 项目：StockSelector / A股智能选股系统
 - 当前 TASK：TASK-20260612-001
 - 当前 ROUND：ROUND-008
-- 执行状态：waiting_commit_push
+- 执行状态：waiting_user_review
 - 验证等级：L2_AGENT_TESTED
 - 用户验证：not_run
-- GitHub 同步：not_pushed
+- GitHub 同步：pushed
 - 状态文件记录分支：main
-- 状态文件观察到的 HEAD：2f1136eee9600ad056967434c74a9aca85a1a521
-- 最近稳定 commit：2f1136eee9600ad056967434c74a9aca85a1a521
+- 状态文件观察到的 HEAD：2d664de4ccf8b5882e101c173a23c0e60f3eaf73
+- 最近稳定 commit：2d664de4ccf8b5882e101c173a23c0e60f3eaf73
 - 最新 CHECKPOINT：无
 - 工作区干净：False
-- 最后更新：2026-06-15T23:49:55+08:00
+- 最后更新：2026-06-16T00:01:10+08:00
 
 ## 当前 Git 实测
 
 - 真实分支：main
-- 当前真实 HEAD：2f1136eee9600ad056967434c74a9aca85a1a521
+- 当前真实 HEAD：2d664de4ccf8b5882e101c173a23c0e60f3eaf73
 - 工作区干净：False
 
 ## 推荐阅读顺序

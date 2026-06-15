@@ -28,5 +28,20 @@
     "command": "python -m unittest discover -s tests -v",
     "exit_code": 0,
     "result": "61 项通过"
+  },
+  {
+    "command": "git add -A",
+    "exit_code": 0,
+    "result": "已 stage 本轮代码、文档、测试和 Agent-Memory 修改；仅出现 Windows 行尾提示"
+  },
+  {
+    "command": "git commit -m \"重构可信历史验证底座\"",
+    "exit_code": 0,
+    "result": "提交成功：2d664de4ccf8b5882e101c173a23c0e60f3eaf73"
+  },
+  {
+    "command": "git push origin main",
+    "exit_code": 0,
+    "result": "推送成功：2f1136e..2d664de main -> main；未使用 force push"
   }
 ]

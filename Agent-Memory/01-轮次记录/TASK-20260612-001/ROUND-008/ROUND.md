@@ -92,6 +92,8 @@ python -u scripts\run_minimal_backtest.py --start-date 2026-01-01 --end-date 202
 
 ## Git 状态
 
-- 本轮尚未提交前，工作区包含本轮代码、文档和 Agent-Memory 修改。
-- 按协作规则，测试通过且工作区确认无明显异常后，可在当前 `main` 分支执行普通 `git add`、commit 和 push。
-- 禁止 force push；不创建或切换分支。
+- 本轮代码、文档和 Agent-Memory 修改已提交。
+- 普通 commit：`2d664de4ccf8b5882e101c173a23c0e60f3eaf73`（提交信息：`重构可信历史验证底座`）。
+- Push：`git push origin main` 成功，`2f1136e..2d664de main -> main`。
+- 未使用 force push；未创建或切换分支。
+- 2026-06-16 00:01 后进行记忆状态同步，因此会产生一个后续记忆同步提交记录 push 已成功。
