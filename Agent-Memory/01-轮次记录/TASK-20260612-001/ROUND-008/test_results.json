@@ -43,5 +43,20 @@
     "command": "git push origin main",
     "exit_code": 0,
     "result": "推送成功：2f1136e..2d664de main -> main；未使用 force push"
+  },
+  {
+    "command": "git commit -m \"记录ROUND-008推送成功\"",
+    "exit_code": 0,
+    "result": "本地记忆同步提交成功：507ad11860f2192fe3f309fb62be65ca66f3b95e"
+  },
+  {
+    "command": "git push origin main",
+    "exit_code": 1,
+    "result": "失败：Recv failure: Connection was reset"
+  },
+  {
+    "command": "git push origin main",
+    "exit_code": 1,
+    "result": "重试失败：Recv failure: Connection was reset"
   }
 ]

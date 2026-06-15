@@ -5,18 +5,19 @@
   "current_task": "TASK-20260612-001",
   "current_round": "ROUND-008",
   "latest_checkpoint": null,
-  "execution_status": "waiting_user_review",
+  "execution_status": "waiting_github_sync",
   "verification_level": "L2_AGENT_TESTED",
   "user_verification": "not_run",
   "branch": "main",
   "base_commit": "2f1136eee9600ad056967434c74a9aca85a1a521",
-  "observed_head_commit": "2d664de4ccf8b5882e101c173a23c0e60f3eaf73",
-  "head_commit": "2d664de4ccf8b5882e101c173a23c0e60f3eaf73",
+  "observed_head_commit": "507ad11860f2192fe3f309fb62be65ca66f3b95e",
+  "head_commit": "507ad11860f2192fe3f309fb62be65ca66f3b95e",
   "last_stable_commit": "2d664de4ccf8b5882e101c173a23c0e60f3eaf73",
   "workspace_clean": false,
-  "github_sync": "pushed",
-  "last_updated": "2026-06-16T00:01:10+08:00",
+  "github_sync": "push_failed_network",
+  "last_updated": "2026-06-16T00:06:12+08:00",
   "open_issues": [
+    "GitHub 同步未完全完成：核心重构 commit `2d664de4ccf8b5882e101c173a23c0e60f3eaf73` 已推送成功，但后续本地记忆同步 commit `507ad11860f2192fe3f309fb62be65ca66f3b95e` 推送连续两次失败，错误为 HTTPS `Recv failure: Connection was reset`；需网络恢复后重试普通 push，不得 force push。",
     "用户尚未真实查看 ROUND-008 报告，因此不得标记 L4_USER_VERIFIED 或 L5_CLOSED。"
   ],
   "notes": [
@@ -28,7 +29,8 @@
     "ROUND-007 完成第一条可被历史数据验证的最小回测闭环，但真实回测使用当天候选 CSV 前 20 只股票向前回测；该 18.78% 结果已在 ROUND-008 降级为固定当前候选股票池下的工程运行样例，不构成策略有效性证据。",
     "ROUND-008 完成可信研究与历史验证系统重构：实时扫描策略和历史验证策略分离，新增 historical_ohlcv_v1 历史 OHLCV 固定因子、默认 broad_current_listed 股票池、下一开盘执行、日线不可成交近似、股票池等权和单因子基线、完整审计报告和可信性测试。",
     "ROUND-008 真实验收 20260615_234854_minimal_backtest：股票池为新浪当前宽 A 股代码池前 30 只，未使用今天成交额/涨跌幅/评分/候选排名过滤；腾讯股票历史 30/30 成功，东财沪深 300 失败后回退 Yahoo；策略累计收益 -10.72%，沪深 300 +1.25%，股票池等权 -3.75%，20 日趋势单因子 -8.70%；结果证明链路可运行，不证明策略有效。",
-    "ROUND-008 普通 commit 2d664de4ccf8b5882e101c173a23c0e60f3eaf73 已推送到 origin/main；未使用 force push，未创建或切换分支。"
+    "ROUND-008 核心重构 commit 2d664de4ccf8b5882e101c173a23c0e60f3eaf73 已推送到 origin/main；未使用 force push，未创建或切换分支。",
+    "ROUND-008 后续本地记忆同步 commit 507ad11860f2192fe3f309fb62be65ca66f3b95e 推送连续两次失败，错误为 HTTPS Recv failure: Connection was reset；现场保留，需网络恢复后重试普通 push。"
   ],
   "round_started_at": "2026-06-15T23:49:55+08:00",
   "start_workspace_clean": true

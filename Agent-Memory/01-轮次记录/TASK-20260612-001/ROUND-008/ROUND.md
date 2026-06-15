@@ -96,4 +96,5 @@ python -u scripts\run_minimal_backtest.py --start-date 2026-01-01 --end-date 202
 - 普通 commit：`2d664de4ccf8b5882e101c173a23c0e60f3eaf73`（提交信息：`重构可信历史验证底座`）。
 - Push：`git push origin main` 成功，`2f1136e..2d664de main -> main`。
 - 未使用 force push；未创建或切换分支。
-- 2026-06-16 00:01 后进行记忆状态同步，因此会产生一个后续记忆同步提交记录 push 已成功。
+- 2026-06-16 00:01 后进行记忆状态同步，生成本地 commit `507ad11860f2192fe3f309fb62be65ca66f3b95e`。
+- 该记忆同步 commit 推送连续两次失败，错误为 HTTPS `Recv failure: Connection was reset`；现场保留，需网络恢复后重试普通 push。
