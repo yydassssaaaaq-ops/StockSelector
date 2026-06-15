@@ -1,0 +1,77 @@
+[
+  {
+    "command": "git status --short",
+    "exit_code": 1,
+    "result": "PowerShell 环境中 git 不在 PATH，命令不可用。项目脚本仍可通过 GitHub Desktop 自带 git 读取状态。"
+  },
+  {
+    "command": "python --version",
+    "exit_code": 0,
+    "result": "Python 3.11.9"
+  },
+  {
+    "command": "python scripts\\validate_memory.py",
+    "exit_code": 0,
+    "result": "初始审计通过，FAIL 0，WARNING 1；警告为状态文件观察到的 HEAD 是当前真实 HEAD 的祖先。"
+  },
+  {
+    "command": "python -m pytest",
+    "exit_code": 1,
+    "result": "失败：No module named pytest。项目当前未声明 pytest 依赖，正式测试入口为 unittest。"
+  },
+  {
+    "command": "python -m unittest discover -s tests -v",
+    "exit_code": 0,
+    "result": "修改前 18 项测试 OK；补充测试后最终 20 项测试 OK。"
+  },
+  {
+    "command": "python scripts\\project_status.py",
+    "exit_code": 0,
+    "result": "可读取真实分支 main、真实 HEAD e3c9faa19704d7ce04ea735a2765fb7e65ff01f2 和工作区状态。"
+  },
+  {
+    "command": "python scripts\\start_round.py",
+    "exit_code": 0,
+    "result": "创建 ROUND-003；同时暴露新 ROUND 未重置 user_verification 的状态漂移，随后已修复。"
+  },
+  {
+    "command": "STOCKSELECTOR_NO_PAUSE=1 scripts\\project_status.bat",
+    "exit_code": 0,
+    "result": "通过；显示当前 ROUND-003、L2_AGENT_TESTED、user_verification not_run。"
+  },
+  {
+    "command": "STOCKSELECTOR_NO_PAUSE=1 scripts\\validate_memory.bat",
+    "exit_code": 0,
+    "result": "通过；FAIL 0，WARNING 0。"
+  },
+  {
+    "command": "STOCKSELECTOR_NO_PAUSE=1 scripts\\build_gpt_context.bat",
+    "exit_code": 0,
+    "result": "通过；已生成 GPT_CONTEXT.md。"
+  },
+  {
+    "command": "python scripts\\build_gpt_context.py",
+    "exit_code": 0,
+    "result": "通过；已生成 GPT_CONTEXT.md。"
+  },
+  {
+    "command": "python scripts\\build_index.py",
+    "exit_code": 0,
+    "result": "通过；已生成 INDEX.md。"
+  },
+  {
+    "command": "python scripts\\git_snapshot.py",
+    "exit_code": 0,
+    "result": "通过；已刷新 ROUND-003 workspace_manifest.json。"
+  },
+  {
+    "command": "python scripts\\validate_memory.py",
+    "exit_code": 0,
+    "result": "收口复测通过；FAIL 0，WARNING 0。"
+  },
+  {
+    "command": "python scripts\\project_status.py",
+    "exit_code": 0,
+    "result": "收口复测通过；当前 ROUND-003、waiting_user_review、L2_AGENT_TESTED、user_verification not_run、未解决问题数量 0。"
+  }
+]

@@ -183,6 +183,13 @@ from typing import Any
 PROJECT = "StockSelector"
 PROJECT_NAME_ZH = "A股智能选股系统"
 VALID_VERIFICATION_LEVELS = {"L0_PLANNED", "L1_CHANGED", "L2_AGENT_TESTED", "L4_USER_VERIFIED", "L5_CLOSED"}
+VALID_USER_VERIFICATIONS = {"not_run", "passed", "failed", "partial_failed"}
+USER_VERIFICATION_LABELS = {
+    "not_run": "not_run（用户尚未验证）",
+    "passed": "passed（用户验证通过）",
+    "failed": "failed（用户验证失败）",
+    "partial_failed": "partial_failed（核心能力通过，部分入口或场景失败）",
+}
 REQUIRED_STATUS_FIELDS = [
     "schema_version", "project", "project_name_zh", "current_task", "current_round",
     "latest_checkpoint", "execution_status", "verification_level", "user_verification",
@@ -260,6 +267,53 @@ def validate_status(status: dict[str, Any]) -> None:
         raise RuntimeError("MEMORY_STATUS.json 缺少字段：" + ", ".join(missing))
     if status.get("verification_level") not in VALID_VERIFICATION_LEVELS:
         raise RuntimeError("verification_level 不合法")
+    if status.get("user_verification") not in VALID_USER_VERIFICATIONS:
+        raise RuntimeError("user_verification 不合法")
+    if not observed_head_commit(status):
+        raise RuntimeError("MEMORY_STATUS.json 缺少 observed_head_commit/head_commit 观察值")
+
+
+def format_user_verification(value: str | None) -> str:
+    return USER_VERIFICATION_LABELS.get(str(value), f"{value}（未知用户验证状态）")
+
+
+def observed_head_commit(status: dict[str, Any]) -> str | None:
+    """Return the HEAD value observed when MEMORY_STATUS.json was generated."""
+    return status.get("observed_head_commit") or status.get("head_commit")
+
+
+def commit_exists(root: Path, commit: str | None) -> bool:
+    if not commit:
+        return False
+    cp = run_git(["cat-file", "-e", f"{commit}^{{commit}}"], root)
+    return cp.returncode == 0
+
+
+def is_ancestor_commit(root: Path, maybe_ancestor: str, maybe_descendant: str) -> bool | None:
+    cp = run_git(["merge-base", "--is-ancestor", maybe_ancestor, maybe_descendant], root)
+    if cp.returncode == 0:
+        return True
+    if cp.returncode == 1:
+        return False
+    return None
+
+
+def classify_observed_head(recorded: str | None, current: str | None, workspace_clean: bool, recorded_exists: bool, is_ancestor: bool | None) -> dict[str, str]:
+    if not recorded:
+        return {"severity": "FAIL", "message": "状态文件观察到的 HEAD 缺失"}
+    if not current:
+        return {"severity": "FAIL", "message": "无法读取当前真实 HEAD"}
+    if not recorded_exists:
+        return {"severity": "FAIL", "message": f"状态文件观察到的 HEAD 不是 Git 可识别的 commit：{recorded}"}
+    if recorded == current:
+        return {"severity": "PASS", "message": "状态文件观察到的 HEAD 与当前真实 HEAD 一致"}
+    if is_ancestor is True:
+        return {"severity": "WARNING", "message": "状态文件观察到的 HEAD 是当前真实 HEAD 的祖先；这通常表示状态文件生成后发生过提交，不构成自引用失败"}
+    if not workspace_clean:
+        return {"severity": "WARNING", "message": "状态文件观察到的 HEAD 与当前真实 HEAD 不一致，但工作区存在未提交修改；以当前真实 HEAD 为准"}
+    if is_ancestor is None:
+        return {"severity": "WARNING", "message": "状态文件观察到的 HEAD 合法，但无法确认它与当前真实 HEAD 的祖先关系"}
+    return {"severity": "FAIL", "message": "状态文件观察到的 HEAD 与当前真实 HEAD 不一致，且不是祖先；请检查是否切换历史或状态记录异常"}
 
 
 def save_status(root: Path, status: dict[str, Any]) -> None:
@@ -416,7 +470,7 @@ BUILD_GPT_CONTEXT = r'''
 from __future__ import annotations
 import argparse
 from pathlib import Path
-from memory_common import current_round_dir, load_status, read_text, render_list, repo_root, workspace_status, write_text, fail
+from memory_common import current_round_dir, load_status, observed_head_commit, read_text, render_list, repo_root, workspace_status, write_text, fail
 
 
 def optional(path: Path, fallback: str = "待确认") -> str:
@@ -426,6 +480,21 @@ def optional(path: Path, fallback: str = "待确认") -> str:
 def brief(text: str, n: int = 24) -> str:
     lines = [line for line in text.splitlines() if line.strip()]
     return "\n".join(lines[:n]) if lines else "待确认"
+
+
+def next_step(status: dict) -> str:
+    execution = status.get("execution_status")
+    if execution == "waiting_github_sync":
+        return "用户在 GitHub Desktop 中检查改动，确认后 Commit 并 Publish/Push；同步前不得标记 L5。"
+    if execution == "waiting_user_reverification":
+        return "用户重新双击验证 BAT 辅助入口，通过后再进入 GitHub 同步阶段。"
+    return "用户检查自动验证结果，确认后再决定是否进入 GitHub 外循环。"
+
+
+def verification_guard(status: dict) -> str:
+    if status.get("user_verification") == "passed":
+        return "用户验证已通过，可保持 `L4_USER_VERIFIED`；GitHub 同步前不得标记 `L5_CLOSED`。"
+    return "当前不得标记 `L4_USER_VERIFIED` 或 `L5_CLOSED`。"
 
 
 def main() -> int:
@@ -448,7 +517,8 @@ def main() -> int:
 - 用户验证：{status.get('user_verification')}
 - GitHub 同步：{status.get('github_sync')}
 - 当前真实分支：{git.get('branch')}
-- 当前 HEAD：{git.get('head_commit')}
+- 当前真实 HEAD：{git.get('head_commit')}
+- 状态文件观察到的 HEAD：{observed_head_commit(status)}
 - 工作区干净：{git.get('workspace_clean')}
 
 ## B. Agent 解释
@@ -476,8 +546,8 @@ tracked 修改：
 ## C. 用户验证
 
 - 用户验证状态：{status.get('user_verification')}
-- 当前不得标记 `L4_USER_VERIFIED` 或 `L5_CLOSED`。
-- 下一步建议：用户检查自动测试结果和 Agent-Memory 记录后，再决定是否进入 GitHub 外循环。
+- {verification_guard(status)}
+- 下一步建议：{next_step(status)}
 
 ## 建议检查区域
 
@@ -501,7 +571,7 @@ if __name__ == "__main__":
 BUILD_INDEX = r'''
 from __future__ import annotations
 import argparse
-from memory_common import load_status, repo_root, workspace_status, write_text, fail
+from memory_common import load_status, observed_head_commit, repo_root, workspace_status, write_text, fail
 
 
 def main() -> int:
@@ -522,8 +592,8 @@ def main() -> int:
 - 验证等级：{status.get('verification_level')}
 - 用户验证：{status.get('user_verification')}
 - GitHub 同步：{status.get('github_sync')}
-- 真实分支：{status.get('branch')}
-- 当前 HEAD：{status.get('head_commit')}
+- 状态文件记录分支：{status.get('branch')}
+- 状态文件观察到的 HEAD：{observed_head_commit(status)}
 - 最近稳定 commit：{status.get('last_stable_commit')}
 - 最新 CHECKPOINT：{status.get('latest_checkpoint') or '无'}
 - 工作区干净：{status.get('workspace_clean')}
@@ -532,7 +602,7 @@ def main() -> int:
 ## 当前 Git 实测
 
 - 真实分支：{git.get('branch')}
-- HEAD：{git.get('head_commit')}
+- 当前真实 HEAD：{git.get('head_commit')}
 - 工作区干净：{git.get('workspace_clean')}
 
 ## 推荐阅读顺序
@@ -601,15 +671,16 @@ if __name__ == "__main__":
 VALIDATE_MEMORY = r'''
 from __future__ import annotations
 import argparse, json
-from memory_common import VALID_VERIFICATION_LEVELS, current_round_dir, current_task_dir, load_status, read_text, repo_root, validate_status, workspace_status
+from memory_common import VALID_USER_VERIFICATIONS, VALID_VERIFICATION_LEVELS, classify_observed_head, commit_exists, current_round_dir, current_task_dir, is_ancestor_commit, load_status, observed_head_commit, read_text, repo_root, validate_status, workspace_status
 
 
 def main() -> int:
     argparse.ArgumentParser(description="验证 Agent-Memory 状态一致性。").parse_args()
-    root = repo_root(); failures = []; warnings = []; passes = []
+    root = repo_root(); failures = []; warnings = []; infos = []; passes = []
     def ok(msg): passes.append("[PASS] " + msg)
     def bad(msg): failures.append("[FAIL] " + msg)
     def warn(msg): warnings.append("[WARNING] " + msg)
+    def info(msg): infos.append("[INFO] " + msg)
     required_dirs = ["src/stock_selector", "tests", "config", "data/raw", "data/interim", "data/processed", "outputs", "logs", "docs", "scripts/templates", "Agent-Memory/00-当前状态", "Agent-Memory/01-轮次记录", "Agent-Memory/02-阶段快照", "Agent-Memory/03-GPT导出"]
     required_files = ["README.md", "AGENTS.md", ".gitignore", ".env.example", "pyproject.toml", "scripts/memory_common.py", "scripts/init_memory.py", "scripts/start_task.py", "scripts/start_round.py", "scripts/finish_round.py", "scripts/git_snapshot.py", "scripts/build_gpt_context.py", "scripts/build_index.py", "scripts/validate_memory.py", "scripts/create_checkpoint.py", "scripts/project_status.py", "tests/test_memory_tools.py", "Agent-Memory/INDEX.md", "Agent-Memory/MEMORY_STATUS.json", "Agent-Memory/03-GPT导出/GPT_CONTEXT.md", "Agent-Memory/00-当前状态/PROJECT.md", "Agent-Memory/00-当前状态/CURRENT_TASK.md", "Agent-Memory/00-当前状态/CURRENT_STATE.md", "Agent-Memory/00-当前状态/OPEN_ISSUES.md", "Agent-Memory/00-当前状态/FILE_MAP.md", "Agent-Memory/00-当前状态/ENVIRONMENT.md", "Agent-Memory/00-当前状态/USAGE.md"]
     for item in required_dirs:
@@ -629,8 +700,11 @@ def main() -> int:
         ok("GPT_CONTEXT.md 非空") if (root / "Agent-Memory/03-GPT导出/GPT_CONTEXT.md").read_text(encoding="utf-8", errors="replace").strip() else bad("GPT_CONTEXT.md 为空")
         ok("INDEX.md 非空") if (root / "Agent-Memory/INDEX.md").read_text(encoding="utf-8", errors="replace").strip() else bad("INDEX.md 为空")
         ok("验证等级合法") if status.get("verification_level") in VALID_VERIFICATION_LEVELS else bad("验证等级非法")
-        if status.get("user_verification") == "not_run" and status.get("verification_level") in {"L4_USER_VERIFIED", "L5_CLOSED"}:
-            bad("用户未验证时不得标记 L4 或 L5")
+        ok("用户验证状态合法") if status.get("user_verification") in VALID_USER_VERIFICATIONS else bad("用户验证状态非法")
+        if status.get("execution_status") in {"task_started", "round_started"} and status.get("user_verification") != "not_run":
+            bad("新 TASK/ROUND 开始后用户验证状态必须重置为 not_run")
+        if status.get("user_verification") != "passed" and status.get("verification_level") in {"L4_USER_VERIFIED", "L5_CLOSED"}:
+            bad("用户未完整验证通过时不得标记 L4 或 L5")
         issue_text = read_text(root / "Agent-Memory/00-当前状态/OPEN_ISSUES.md")
         if status.get("open_issues"):
             ok("OPEN_ISSUES.md 已记录开放问题") if all(str(x) in issue_text for x in status["open_issues"]) else bad("OPEN_ISSUES.md 与 JSON open_issues 不一致")
@@ -638,7 +712,22 @@ def main() -> int:
             ok("OPEN_ISSUES.md 标记当前无开放问题") if "当前无开放问题" in issue_text else bad("OPEN_ISSUES.md 应写明当前无开放问题")
         git = workspace_status(root)
         ok("JSON 分支与真实 Git 分支一致") if status.get("branch") == git.get("branch") else bad(f"JSON 分支与真实分支不一致：{status.get('branch')} != {git.get('branch')}")
-        ok("JSON head_commit 与真实 HEAD 一致") if status.get("head_commit") == git.get("head_commit") else bad("JSON head_commit 与真实 HEAD 不一致")
+        observed = observed_head_commit(status)
+        current = git.get("head_commit")
+        exists = commit_exists(root, observed)
+        ancestor = is_ancestor_commit(root, observed, current) if observed and current and exists else None
+        head_result = classify_observed_head(observed, current, bool(git.get("workspace_clean")), exists, ancestor)
+        message = head_result["message"]
+        if head_result["severity"] == "PASS":
+            ok(message)
+        elif head_result["severity"] == "INFO":
+            info(message)
+        elif head_result["severity"] == "WARNING":
+            warn(message)
+        else:
+            bad(message)
+        if status.get("head_commit") and status.get("head_commit") != observed:
+            warn("兼容字段 head_commit 与 observed_head_commit 不一致；二者都应表示最近观察到的 HEAD")
         if git.get("branch") != "main":
             warn("真实分支不是 main：" + str(git.get("branch")))
         try:
@@ -656,7 +745,7 @@ def main() -> int:
                         bad(f"发现未替换占位符 {token}：{path.relative_to(root)}")
     print("Agent-Memory 检查报告")
     print("=" * 24)
-    for line in passes + warnings + failures:
+    for line in passes + infos + warnings + failures:
         print(line)
     print(f"结果：{'失败' if failures else '通过'}，FAIL {len(failures)} 项，WARNING {len(warnings)} 项。")
     return 1 if failures else 0
@@ -669,7 +758,16 @@ if __name__ == "__main__":
 PROJECT_STATUS = r'''
 from __future__ import annotations
 import argparse
-from memory_common import load_status, repo_root, workspace_status, fail
+from memory_common import format_user_verification, load_status, observed_head_commit, repo_root, workspace_status, fail
+
+
+def next_step(status: dict) -> str:
+    execution = status.get("execution_status")
+    if execution == "waiting_github_sync":
+        return "用户在 GitHub Desktop 中检查改动，确认后 Commit 并 Publish/Push；同步前不得标记 L5。"
+    if execution == "waiting_user_reverification":
+        return "用户重新双击验证 BAT 辅助入口，通过后再进入 GitHub 同步阶段。"
+    return "用户检查自动验证结果，确认后再决定是否进入 GitHub 外循环。"
 
 
 def main() -> int:
@@ -683,9 +781,10 @@ def main() -> int:
         print(f"当前 ROUND：{status.get('current_round')}")
         print(f"执行状态：{status.get('execution_status')}")
         print(f"验证等级：{status.get('verification_level')}")
-        print(f"用户验证：{status.get('user_verification')}")
+        print(f"用户验证：{format_user_verification(status.get('user_verification'))}")
         print(f"真实分支：{git.get('branch')}")
-        print(f"HEAD commit：{git.get('head_commit')}")
+        print(f"当前真实 HEAD：{git.get('head_commit')}")
+        print(f"状态文件观察到的 HEAD：{observed_head_commit(status)}")
         print(f"最近稳定 commit：{status.get('last_stable_commit')}")
         print(f"GitHub 同步：{status.get('github_sync')}")
         print(f"工作区干净：{git.get('workspace_clean')}")
@@ -693,7 +792,7 @@ def main() -> int:
         print(f"untracked 数量：{len(git.get('untracked', []))}")
         print(f"未解决问题数量：{len(status.get('open_issues', []))}")
         print("GPT_CONTEXT 路径：Agent-Memory/03-GPT导出/GPT_CONTEXT.md")
-        print("建议下一步：用户检查 L2 自动验证结果，确认后再决定是否进入 GitHub 外循环。")
+        print(f"建议下一步：{next_step(status)}")
         return 0
     except Exception as exc:
         fail(str(exc)); return 1
@@ -730,7 +829,7 @@ def main() -> int:
         execution = "waiting_user_review" if all_passed else "agent_test_failed"
         status.update({
             "execution_status": execution, "verification_level": level, "user_verification": "not_run",
-            "branch": git.get("branch"), "head_commit": git.get("head_commit"),
+            "branch": git.get("branch"), "observed_head_commit": git.get("head_commit"), "head_commit": git.get("head_commit"),
             "workspace_clean": git.get("workspace_clean"), "github_sync": "not_pushed",
             "last_updated": now_iso(), "open_issues": [] if all_passed else ["自动测试未全部通过，需查看 ROUND.md。"],
         })
@@ -868,7 +967,7 @@ def main() -> int:
         round_dir.mkdir(parents=True, exist_ok=False)
         write_text(task_dir / "TASK.md", f"# {task}\n\n- 任务名称：{args.name}\n- 当前验证等级：L0_PLANNED\n- 关联 ROUND：{round_id}\n", root)
         write_text(round_dir / "ROUND.md", f"# {round_id}\n\n- 所属 TASK：{task}\n- 状态：已创建，待执行。\n", root)
-        status.update({"current_task": task, "current_round": round_id, "execution_status": "task_started", "verification_level": "L0_PLANNED", "branch": git["branch"], "base_commit": git["head_commit"], "head_commit": git["head_commit"], "workspace_clean": git["workspace_clean"], "last_updated": now_iso()})
+        status.update({"current_task": task, "current_round": round_id, "execution_status": "task_started", "verification_level": "L0_PLANNED", "user_verification": "not_run", "branch": git["branch"], "base_commit": git["head_commit"], "observed_head_commit": git["head_commit"], "head_commit": git["head_commit"], "workspace_clean": git["workspace_clean"], "github_sync": "not_pushed", "open_issues": [], "last_updated": now_iso()})
         save_status(root, status)
         atomic_json(round_dir / "workspace_manifest.json", manifest(root, git["head_commit"], git["workspace_clean"]), root)
         print(f"已创建 TASK：{task}")
@@ -898,7 +997,7 @@ def main() -> int:
         root = repo_root(); status = load_status(root); task_dir = current_task_dir(root, status)
         round_id = next_round(task_dir); round_dir = task_dir / round_id; round_dir.mkdir(parents=True, exist_ok=False)
         git = workspace_status(root)
-        status.update({"current_round": round_id, "execution_status": "round_started", "verification_level": "L0_PLANNED", "branch": git["branch"], "base_commit": git["head_commit"], "head_commit": git["head_commit"], "workspace_clean": git["workspace_clean"], "round_started_at": now_iso(), "start_workspace_clean": git["workspace_clean"], "last_updated": now_iso()})
+        status.update({"current_round": round_id, "execution_status": "round_started", "verification_level": "L0_PLANNED", "user_verification": "not_run", "branch": git["branch"], "base_commit": git["head_commit"], "observed_head_commit": git["head_commit"], "head_commit": git["head_commit"], "workspace_clean": git["workspace_clean"], "github_sync": "not_pushed", "open_issues": [], "round_started_at": now_iso(), "start_workspace_clean": git["workspace_clean"], "last_updated": now_iso()})
         save_status(root, status)
         write_text(round_dir / "ROUND.md", f"# {round_id}\n\n- 所属 TASK：{status.get('current_task')}\n- 起始时间：{status.get('round_started_at')}\n- 起始分支：{git.get('branch')}\n- 起始 HEAD：{git.get('head_commit')}\n", root)
         atomic_json(round_dir / "workspace_manifest.json", manifest(root, git["head_commit"], git["workspace_clean"]), root)
@@ -962,18 +1061,21 @@ if __name__ == "__main__":
 
 TESTS = r'''
 from __future__ import annotations
-import json, subprocess, sys, unittest
+import json, os, subprocess, sys, unittest
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 SCRIPTS = ROOT / "scripts"
 sys.path.insert(0, str(SCRIPTS))
-from memory_common import VALID_VERIFICATION_LEVELS, atomic_json, load_status  # noqa: E402
+from memory_common import VALID_USER_VERIFICATIONS, VALID_VERIFICATION_LEVELS, atomic_json, classify_observed_head, load_status, observed_head_commit  # noqa: E402
 
 
 class MemoryToolsTest(unittest.TestCase):
     def run_script(self, name: str):
-        return subprocess.run([sys.executable, str(SCRIPTS / name)], cwd=ROOT, text=True, encoding="utf-8", errors="replace", stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        env = os.environ.copy()
+        env["PYTHONUTF8"] = "1"
+        env["PYTHONIOENCODING"] = "utf-8"
+        return subprocess.run([sys.executable, str(SCRIPTS / name)], cwd=ROOT, text=True, encoding="utf-8", errors="replace", stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env)
 
     def test_memory_status_can_be_read(self):
         self.assertEqual(load_status(ROOT)["project"], "StockSelector")
@@ -988,6 +1090,13 @@ class MemoryToolsTest(unittest.TestCase):
 
     def test_verification_level_is_valid(self):
         self.assertIn(load_status(ROOT)["verification_level"], VALID_VERIFICATION_LEVELS)
+
+    def test_user_verification_is_valid(self):
+        self.assertIn(load_status(ROOT)["user_verification"], VALID_USER_VERIFICATIONS)
+
+    def test_observed_head_exists_in_status(self):
+        status = load_status(ROOT)
+        self.assertTrue(observed_head_commit(status))
 
     def test_current_task_and_round_match(self):
         status = load_status(ROOT)
@@ -1016,6 +1125,97 @@ class MemoryToolsTest(unittest.TestCase):
         cp = self.run_script("project_status.py")
         self.assertEqual(cp.returncode, 0, cp.stderr + cp.stdout)
 
+    def test_project_status_shows_true_and_observed_head(self):
+        cp = self.run_script("project_status.py")
+        self.assertEqual(cp.returncode, 0, cp.stderr + cp.stdout)
+        self.assertIn("当前真实 HEAD：", cp.stdout)
+        self.assertIn("状态文件观察到的 HEAD：", cp.stdout)
+
+    def test_commit_after_status_snapshot_does_not_fail_when_observed_head_is_ancestor(self):
+        result = classify_observed_head(
+            recorded="1111111111111111111111111111111111111111",
+            current="2222222222222222222222222222222222222222",
+            workspace_clean=True,
+            recorded_exists=True,
+            is_ancestor=True,
+        )
+        self.assertEqual(result["severity"], "WARNING")
+
+    def test_validate_memory_accepts_legal_historical_commit_assessment(self):
+        result = classify_observed_head(
+            recorded="1111111111111111111111111111111111111111",
+            current="2222222222222222222222222222222222222222",
+            workspace_clean=False,
+            recorded_exists=True,
+            is_ancestor=False,
+        )
+        self.assertEqual(result["severity"], "WARNING")
+
+    def test_invalid_observed_head_is_failure(self):
+        result = classify_observed_head(
+            recorded="not-a-commit",
+            current="2222222222222222222222222222222222222222",
+            workspace_clean=True,
+            recorded_exists=False,
+            is_ancestor=None,
+        )
+        self.assertEqual(result["severity"], "FAIL")
+
+    def test_bat_helpers_are_portable(self):
+        expected = {
+            "project_status.bat": "project_status.py",
+            "validate_memory.bat": "validate_memory.py",
+            "build_gpt_context.bat": "build_gpt_context.py",
+        }
+        for bat_name, script_name in expected.items():
+            with self.subTest(bat=bat_name):
+                text = (SCRIPTS / bat_name).read_text(encoding="utf-8", errors="replace")
+                lowered = text.lower()
+                self.assertIn("%~dp0", text)
+                self.assertIn('cd /d "%~dp0.."', text)
+                self.assertNotIn("scripts\\scripts", lowered)
+                self.assertIn("chcp 65001 >nul", lowered)
+                self.assertIn('set "PYTHONUTF8=1"', text)
+                self.assertIn("STOCKSELECTOR_NO_PAUSE", text)
+                self.assertIn(f'set "SCRIPT=%~dp0{script_name}"', text)
+                self.assertIn('python "%SCRIPT%"', text)
+                self.assertIn('py "%SCRIPT%"', text)
+
+    def test_new_task_and_round_reset_user_verification(self):
+        for script_name in ["start_task.py", "start_round.py"]:
+            with self.subTest(script=script_name):
+                text = (SCRIPTS / script_name).read_text(encoding="utf-8")
+                self.assertIn('"verification_level": "L0_PLANNED"', text)
+                self.assertIn('"user_verification": "not_run"', text)
+
+    def test_init_memory_templates_match_current_files(self):
+        import init_memory  # noqa: E402
+
+        expected_templates = {
+            "MEMORY_COMMON": SCRIPTS / "memory_common.py",
+            "BUILD_GPT_CONTEXT": SCRIPTS / "build_gpt_context.py",
+            "BUILD_INDEX": SCRIPTS / "build_index.py",
+            "GIT_SNAPSHOT": SCRIPTS / "git_snapshot.py",
+            "VALIDATE_MEMORY": SCRIPTS / "validate_memory.py",
+            "PROJECT_STATUS": SCRIPTS / "project_status.py",
+            "FINISH_ROUND": SCRIPTS / "finish_round.py",
+            "START_TASK": SCRIPTS / "start_task.py",
+            "START_ROUND": SCRIPTS / "start_round.py",
+            "CREATE_CHECKPOINT": SCRIPTS / "create_checkpoint.py",
+            "TESTS": ROOT / "tests" / "test_memory_tools.py",
+        }
+        for attr, path in expected_templates.items():
+            with self.subTest(template=attr):
+                actual = getattr(init_memory, attr).lstrip("\n")
+                expected = path.read_text(encoding="utf-8")
+                self.assertEqual(actual, expected)
+
+        for script_name in ["project_status", "validate_memory", "build_gpt_context"]:
+            with self.subTest(bat_template=script_name):
+                actual = init_memory.bat(script_name).replace("\r\n", "\n")
+                expected = (SCRIPTS / f"{script_name}.bat").read_text(encoding="utf-8").replace("\r\n", "\n")
+                self.assertEqual(actual, expected)
+
     def test_atomic_json_write(self):
         tmp = ROOT / "logs" / ".test-tmp"
         tmp.mkdir(parents=True, exist_ok=True)
@@ -1038,23 +1238,33 @@ if __name__ == "__main__":
 def bat(script: str) -> str:
     return f'''@echo off
 chcp 65001 >nul
-cd /d "%~dp0\\.."
+set "PYTHONUTF8=1"
+cd /d "%~dp0.."
+set "SCRIPT=%~dp0{script}.py"
+
 where python >nul 2>nul
-if %ERRORLEVEL%==0 (
-  python scripts\\{script}.py
-  set CODE=%ERRORLEVEL%
-  goto done
-)
+if not errorlevel 1 goto run_python
+
 where py >nul 2>nul
-if %ERRORLEVEL%==0 (
-  py scripts\\{script}.py
-  set CODE=%ERRORLEVEL%
-  goto done
-)
-echo 未找到 python 或 py，请先安装或配置 Python。
-set CODE=1
+if not errorlevel 1 goto run_py
+
+echo 错误：未找到 python 或 py，请先安装 Python 或将 Python 加入 PATH。
+set "CODE=1"
+goto done
+
+:run_python
+python "%SCRIPT%"
+set "CODE=%ERRORLEVEL%"
+goto done
+
+:run_py
+py "%SCRIPT%"
+set "CODE=%ERRORLEVEL%"
+goto done
+
 :done
-pause
+set "NO_PAUSE=%STOCKSELECTOR_NO_PAUSE: =%"
+if not "%NO_PAUSE%"=="1" pause
 exit /b %CODE%
 '''
 

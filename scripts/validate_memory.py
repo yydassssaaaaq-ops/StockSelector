@@ -30,6 +30,8 @@ def main() -> int:
         ok("INDEX.md 非空") if (root / "Agent-Memory/INDEX.md").read_text(encoding="utf-8", errors="replace").strip() else bad("INDEX.md 为空")
         ok("验证等级合法") if status.get("verification_level") in VALID_VERIFICATION_LEVELS else bad("验证等级非法")
         ok("用户验证状态合法") if status.get("user_verification") in VALID_USER_VERIFICATIONS else bad("用户验证状态非法")
+        if status.get("execution_status") in {"task_started", "round_started"} and status.get("user_verification") != "not_run":
+            bad("新 TASK/ROUND 开始后用户验证状态必须重置为 not_run")
         if status.get("user_verification") != "passed" and status.get("verification_level") in {"L4_USER_VERIFIED", "L5_CLOSED"}:
             bad("用户未完整验证通过时不得标记 L4 或 L5")
         issue_text = read_text(root / "Agent-Memory/00-当前状态/OPEN_ISSUES.md")

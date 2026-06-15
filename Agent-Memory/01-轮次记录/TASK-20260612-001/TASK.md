@@ -6,9 +6,9 @@
 - 已知事实：项目英文名 StockSelector，中文名 A股智能选股系统。
 - 待确认事项：数据源、复权方案、股票池、指标、筛选规则、回测框架、模型类型、Agent 决策方式、数据库、实盘接口、交易周期、输出排序规则。
 - 完成标准：规定脚本可运行，自动测试通过，状态文件一致，ROUND-001 如实记录。
-- 当前验证等级：L4_USER_VERIFIED
-- 用户验证状态：passed
-- 当前执行状态：waiting_github_sync
-- 关联 ROUND：ROUND-002
+- 当前验证等级：L2_AGENT_TESTED
+- 用户验证状态：not_run
+- 当前执行状态：waiting_user_review
+- 关联 ROUND：ROUND-004
 - GitHub 外循环要求：本轮不自动 Commit，不自动 Push。
-- 风险：BAT 已由用户重新双击验证通过，但尚未 Commit/Push，当前不得进入 L5_CLOSED。
+- 风险：历史案卷库 V0.1 已自动验证并浏览器冒烟通过，但尚未经用户真实双击验收，当前不得进入 L4 或 L5。

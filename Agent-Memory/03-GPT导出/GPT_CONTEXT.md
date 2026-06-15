@@ -6,14 +6,14 @@
 
 - 项目：StockSelector / A股智能选股系统
 - 当前 TASK：TASK-20260612-001
-- 当前 ROUND：ROUND-002
-- 执行状态：waiting_github_sync
-- 验证等级：L4_USER_VERIFIED
-- 用户验证：passed
+- 当前 ROUND：ROUND-005
+- 执行状态：waiting_user_review
+- 验证等级：L2_AGENT_TESTED
+- 用户验证：not_run
 - GitHub 同步：not_pushed
 - 当前真实分支：main
-- 当前真实 HEAD：a38c8ad71ce4e95dd910cad6b86d9b9392981bb4
-- 状态文件观察到的 HEAD：a38c8ad71ce4e95dd910cad6b86d9b9392981bb4
+- 当前真实 HEAD：e3c9faa19704d7ce04ea735a2765fb7e65ff01f2
+- 状态文件观察到的 HEAD：e3c9faa19704d7ce04ea735a2765fb7e65ff01f2
 - 工作区干净：False
 
 ## B. Agent 解释
@@ -21,148 +21,119 @@
 ### 当前任务
 # CURRENT_TASK
 - 当前 TASK：TASK-20260612-001
-- 任务名称：修复 Windows BAT 辅助入口问题
-- 当前状态：waiting_github_sync
-- 当前验证等级：L4_USER_VERIFIED
-- 用户验证状态：passed
-- 当前卡点：无开放问题；等待用户在 GitHub Desktop 中确认并同步。
-- 已完成：ROUND-002 已建立；已记录用户真实反馈；三个 BAT 辅助入口已修复；自动验证通过；用户已真实双击验证通过。
-- 未完成：尚未 Commit，尚未 Push，当前不得进入 L5_CLOSED。
-- 下一步：用户在 GitHub Desktop 中检查本轮改动，确认后再执行 Commit 和 Publish/Push。
-- 关联 ROUND：ROUND-002
-- 是否需要 GitHub 外循环：是，等待用户手动执行；本轮 Agent 不 Commit、不 Push。
+- 任务名称：真实历史股票案卷库产品化与自动增量监控
+- 当前 ROUND：ROUND-005
+- 本轮目标：将历史案卷库升级为自动增量监控模式，双击启动后同时执行增量导入、只读文件监控、本地网页服务和浏览器工作台。
+- 当前状态：waiting_user_review
+- 当前验证等级：L2_AGENT_TESTED
+- 用户验证状态：not_run
+- 当前卡点：无阻塞问题；等待用户双击 `启动历史案卷库.bat` 和浏览器复验。
+- 已完成：只读文件监控、变更防抖、增量变更导入、监控事件日志、今日变化页面、监控状态和开关、模拟新增案卷验收、自动化测试。
+- 未完成：用户真实双击验收、GitHub 外循环、正式选股策略设计与实现。
+- 下一步：用户访问 `http://127.0.0.1:8765/` 或双击 BAT 验收；确认后可进入基于真实案卷库的选股逻辑研讨。
+- 是否需要 GitHub 外循环：待用户确认；本轮 Agent 未 Commit、未 Push。
 
 ### 当前状态
 # CURRENT_STATE
-- 当前阶段：Windows BAT 辅助入口已由用户重新验证通过，等待 GitHub 同步。
-- 当前可运行能力：生成 GPT_CONTEXT、生成 INDEX、验证 Agent-Memory、输出项目状态、开始 TASK/ROUND、结束 ROUND、创建 CHECKPOINT。
-- 当前正常功能：用户已验证 `python scripts\project_status.py`、`python scripts\validate_memory.py` 和 `python -m unittest discover -s tests -v` 通过；本轮自动 BAT 非交互测试已通过；用户重新双击三个 BAT 也已通过。
-- 当前异常历史：用户双击 `scripts\project_status.bat` 曾失败，表现为错误寻找 `scripts\scripts\project_status.py`、中文路径解析异常、CMD 中文乱码、未可靠切换到仓库根目录。
-- 当前处理结果：三个 BAT 已改为使用 `%~dp0` 定位自身目录、带引号路径、`cd /d "%~dp0.."` 切换仓库根目录、UTF-8 当前进程设置、python/py 顺序探测、双击 pause 与 `STOCKSELECTOR_NO_PAUSE=1` 非交互跳过；用户真实双击复验通过。
-- 当前尚不存在的业务能力：真实数据采集、股票池生成、特征指标、筛选规则、回测验证、Agent 决策、报告生成、实盘接口。
-- 当前限制：用户验证状态为 passed，可达到 L4_USER_VERIFIED；因尚未 Commit/Push，不得进入 L5_CLOSED。
-- Git HEAD 记录语义：`MEMORY_STATUS.json` 中 `observed_head_commit` 表示最近一次生成状态文件时观察到的 HEAD；兼容字段 `head_commit` 同样只表示观察值。当前真实 HEAD 必须以 Git 动态读取结果为准，不再要求状态文件观察值永远等于提交后的 HEAD。
-- 最近一次测试：见 `Agent-Memory/01-轮次记录/TASK-20260612-001/ROUND-002/ROUND.md`。
-- 最近稳定 commit：a38c8ad71ce4e95dd910cad6b86d9b9392981bb4
-- 状态文件观察到的 HEAD：a38c8ad71ce4e95dd910cad6b86d9b9392981bb4
-- 当前真实 HEAD：由 `git rev-parse --verify HEAD` 或 `scripts/project_status.py` 动态读取。
-- 下一次优先事项：用户在 GitHub Desktop 中检查、Commit，并在需要时 Publish/Push。
+- 当前阶段：真实历史股票案卷库 V0.1 已升级为自动增量监控模式，等待用户复核。
+- 当前可运行能力：只读导入旧 L.Lawlight 历史数据、SQLite 索引、变更路径级增量导入、文件监控、防抖、删除和重命名识别、今日变化页面、股票搜索、案卷详情、案卷对比、诊断中心、数据考古报告、双击启动 BAT。
+- 当前正常命令：`python scripts\import_legacy_cases.py`、`python scripts\serve_case_library.py --open-browser`、`python -m unittest discover -s tests -v`、`python scripts\validate_memory.py`。
+- 当前真实数据：正式导入扫描 `D:\AAAAAAAAA项目\L.Lawlight\1\RadarData` 和 `HumanView`，433 个目录、2430 个文件、9 只股票、19 个案卷、无法解析 0。
+- 当前新增监控状态：本地服务进程已启动于 `http://127.0.0.1:8765/`，`/api/monitor/status` 返回 enabled=true、running=true。
+- 本轮模拟验收：临时旧项目新增 688001 案卷，监控发现 13 个新增文件，538 ms 内进入数据库，自动导入耗时 137 ms，今日变化页显示新增股票 1、新增案卷 1。
+- 当前尚不存在的业务能力：正式选股策略、涨跌预测、回测交易、实盘接口、投资建议。
+- 当前限制：尚未经过用户真实双击验收，因此验证等级保持 `L2_AGENT_TESTED`，不得标记 `L4_USER_VERIFIED` 或 `L5_CLOSED`。
+- Git HEAD 记录语义：当前环境 PowerShell 中 `git` 不在 PATH；`MEMORY_STATUS.json` 里的 HEAD 字段保留最近观察值。
+- 最近一次测试：见 `Agent-Memory/01-轮次记录/TASK-20260612-001/ROUND-005/ROUND.md`。
+- 最近稳定 commit：e3c9faa19704d7ce04ea735a2765fb7e65ff01f2
+- 下一次优先事项：用户双击启动并验收工作台；通过后可进入选股逻辑研讨。
 
 ### 开放问题
 # OPEN_ISSUES
 当前无开放问题。
+非阻塞观察：
+- 当前 PowerShell 环境中 `git` 不在 PATH；本轮未执行 git 操作。
+- 项目测试入口仍为 `python -m unittest discover -s tests -v`，未声明 pytest 依赖。
+- 自动监控采用标准库轮询，适合当前 2430 文件规模；如果旧项目文件量大幅增长，可再评估 watchdog 类事件驱动实现。
 
 ### 最近 ROUND
-# ROUND-002
+# ROUND-005
 ## 基本信息
 - 所属 TASK：TASK-20260612-001
-- ROUND ID：ROUND-002
-- 触发来源：用户真实验证反馈
-- 本轮目标：修复 Windows BAT 辅助入口问题，不修改选股业务代码。
-- 起始时间：2026-06-12T20:52:52+08:00
-- 结束时间：2026-06-12T21:01:19+08:00
-- 用户重新验证时间：2026-06-12T21:09:44+08:00
+- ROUND ID：ROUND-005
+- 触发来源：用户要求将历史股票案卷库升级为自动增量监控模式
+- 本轮目标：双击启动后同时完成增量导入、只读文件监控、本地网页服务和浏览器工作台；旧项目产生 RadarData 或 HumanView 新案卷时自动发现、导入、检查并更新网页
+- 起始时间：2026-06-15T01:10:41+08:00
+- 结束时间：2026-06-15T01:11:36+08:00
 - 起始分支：main
-- 起始 HEAD：a38c8ad71ce4e95dd910cad6b86d9b9392981bb4
+- 起始 HEAD：e3c9faa19704d7ce04ea735a2765fb7e65ff01f2
 - 是否 Commit：否
 - 是否 Push：否
-- 是否创建或切换分支：否
-## 用户真实反馈
-- `python scripts\project_status.py` 可以正常显示项目状态。
-- `python scripts\validate_memory.py` 结果为 PASS，FAIL 0，WARNING 0。
-- `python -m unittest discover -s tests -v` 共 11 项测试，全部通过。
-- 双击 `scripts\project_status.bat` 执行失败。
-- 实际问题包括：BAT 错误寻找 `scripts\scripts\project_status.py`；仓库路径包含中文时命令解析异常；CMD 中文乱码；BAT 没有可靠地从任意启动位置切换到仓库根目录。
+- 是否修改旧项目：否，旧 `D:\AAAAAAAAA项目\L.Lawlight\1` 仅被只读扫描
 ## 本轮修改
-- 修复 `scripts/project_status.bat`。
-- 修复 `scripts/validate_memory.bat`。
-- 修复 `scripts/build_gpt_context.bat`。
+- 新增 `src/stock_selector/case_library/monitor.py`
+- 扩展 `src/stock_selector/case_library/importer.py`：新增监控表、自动导入批次表、案卷变化表、删除墓碑字段、变更路径级增量导入
+- 扩展 `src/stock_selector/case_library/webapp.py`：新增今日变化 API、监控状态 API、监控开关 API、今日变化页面，并在服务生命周期内启动/停止监控线程
+- 更新 `启动历史案卷库.bat`：双击启动后执行导入、启动监控、启动网页服务和浏览器入口，失败保留窗口
+- 新增 `tests/test_case_library_monitor.py`
+- 更新 `docs/case_library_usage.md`
+- 生成 `outputs/case_library/monitor_simulation_summary.json`
+## 真实数据状态
+- 真实旧项目根目录：`D:\AAAAAAAAA项目\L.Lawlight\1`
+- 监控目录：`RadarData`、`HumanView`
 
 ### 工作区摘要
 
 tracked 修改：
-- .gitignore
-- README.md
-
-未跟踪文件：
-- .env.example
-- AGENTS.md
 - Agent-Memory/00-当前状态/CURRENT_STATE.md
 - Agent-Memory/00-当前状态/CURRENT_TASK.md
 - Agent-Memory/00-当前状态/ENVIRONMENT.md
 - Agent-Memory/00-当前状态/FILE_MAP.md
 - Agent-Memory/00-当前状态/OPEN_ISSUES.md
-- Agent-Memory/00-当前状态/PROJECT.md
 - Agent-Memory/00-当前状态/USAGE.md
-- Agent-Memory/01-轮次记录/TASK-20260612-001/ROUND-001/ROUND.md
-- Agent-Memory/01-轮次记录/TASK-20260612-001/ROUND-001/test_results.json
-- Agent-Memory/01-轮次记录/TASK-20260612-001/ROUND-001/workspace_manifest.json
-- Agent-Memory/01-轮次记录/TASK-20260612-001/ROUND-002/ROUND.md
-- Agent-Memory/01-轮次记录/TASK-20260612-001/ROUND-002/test_results.json
-- Agent-Memory/01-轮次记录/TASK-20260612-001/ROUND-002/workspace_manifest.json
 - Agent-Memory/01-轮次记录/TASK-20260612-001/TASK.md
-- Agent-Memory/02-阶段快照/README.md
 - Agent-Memory/03-GPT导出/GPT_CONTEXT.md
 - Agent-Memory/INDEX.md
 - Agent-Memory/MEMORY_STATUS.json
-- config/README.md
-- data/README.md
-- data/interim/.gitkeep
-- data/processed/.gitkeep
-- data/raw/.gitkeep
-- docs/ARCHITECTURE.md
-- docs/DESIGN_QUESTIONS.md
-- docs/DEVELOPMENT_WORKFLOW.md
-- logs/README.md
-- outputs/README.md
-- pyproject.toml
-- scripts/build_gpt_context.bat
-- scripts/build_gpt_context.py
-- scripts/build_index.py
-- scripts/create_checkpoint.py
-- scripts/finish_round.py
-- scripts/git_snapshot.py
 - scripts/init_memory.py
-- scripts/memory_common.py
-- scripts/project_status.bat
-- scripts/project_status.py
 - scripts/start_round.py
 - scripts/start_task.py
-- scripts/templates/CHECKPOINT.template.md
-- scripts/templates/ISSUE.template.md
-- scripts/templates/ROUND.template.md
-- scripts/templates/TASK.template.md
-- scripts/validate_memory.bat
 - scripts/validate_memory.py
-- src/stock_selector/__init__.py
-- src/stock_selector/agents/README.md
-- src/stock_selector/agents/__init__.py
-- src/stock_selector/backtest/README.md
-- src/stock_selector/backtest/__init__.py
-- src/stock_selector/common/README.md
-- src/stock_selector/common/__init__.py
-- src/stock_selector/data/README.md
-- src/stock_selector/data/__init__.py
-- src/stock_selector/features/README.md
-- src/stock_selector/features/__init__.py
-- src/stock_selector/reports/README.md
-- src/stock_selector/reports/__init__.py
-- src/stock_selector/screening/README.md
-- src/stock_selector/screening/__init__.py
-- tests/__init__.py
 - tests/test_memory_tools.py
-- 新建文件夹/5b4c8c3c74c7b9eef154ea8169a70a17.png
+
+未跟踪文件：
+- Agent-Memory/01-轮次记录/TASK-20260612-001/ROUND-003/ROUND.md
+- Agent-Memory/01-轮次记录/TASK-20260612-001/ROUND-003/test_results.json
+- Agent-Memory/01-轮次记录/TASK-20260612-001/ROUND-003/workspace_manifest.json
+- Agent-Memory/01-轮次记录/TASK-20260612-001/ROUND-004/ROUND.md
+- Agent-Memory/01-轮次记录/TASK-20260612-001/ROUND-004/test_results.json
+- Agent-Memory/01-轮次记录/TASK-20260612-001/ROUND-004/workspace_manifest.json
+- Agent-Memory/01-轮次记录/TASK-20260612-001/ROUND-005/ROUND.md
+- Agent-Memory/01-轮次记录/TASK-20260612-001/ROUND-005/test_results.json
+- Agent-Memory/01-轮次记录/TASK-20260612-001/ROUND-005/workspace_manifest.json
+- docs/case_library_usage.md
+- docs/legacy_data_schema_map.md
+- scripts/import_legacy_cases.py
+- scripts/launch_case_library.py
+- scripts/serve_case_library.py
+- src/stock_selector/case_library/__init__.py
+- src/stock_selector/case_library/importer.py
+- src/stock_selector/case_library/monitor.py
+- src/stock_selector/case_library/webapp.py
+- tests/test_case_library.py
+- tests/test_case_library_monitor.py
+- 启动历史案卷库.bat
 
 ## C. 用户验证
 
-- 用户验证状态：passed
-- 用户验证已通过，可保持 `L4_USER_VERIFIED`；GitHub 同步前不得标记 `L5_CLOSED`。
-- 下一步建议：用户在 GitHub Desktop 中检查改动，确认后 Commit 并 Publish/Push；同步前不得标记 L5。
+- 用户验证状态：not_run
+- 当前不得标记 `L4_USER_VERIFIED` 或 `L5_CLOSED`。
+- 下一步建议：用户检查自动验证结果，确认后再决定是否进入 GitHub 外循环。
 
 ## 建议检查区域
 
 - `Agent-Memory/MEMORY_STATUS.json`
 - `Agent-Memory/00-当前状态/`
-- `Agent-Memory/01-轮次记录/TASK-20260612-001/ROUND-002/`
+- `Agent-Memory/01-轮次记录/TASK-20260612-001/ROUND-005/`
 - `scripts/`
 - `tests/test_memory_tools.py`

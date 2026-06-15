@@ -25,7 +25,7 @@ def main() -> int:
         round_dir.mkdir(parents=True, exist_ok=False)
         write_text(task_dir / "TASK.md", f"# {task}\n\n- 任务名称：{args.name}\n- 当前验证等级：L0_PLANNED\n- 关联 ROUND：{round_id}\n", root)
         write_text(round_dir / "ROUND.md", f"# {round_id}\n\n- 所属 TASK：{task}\n- 状态：已创建，待执行。\n", root)
-        status.update({"current_task": task, "current_round": round_id, "execution_status": "task_started", "verification_level": "L0_PLANNED", "branch": git["branch"], "base_commit": git["head_commit"], "observed_head_commit": git["head_commit"], "head_commit": git["head_commit"], "workspace_clean": git["workspace_clean"], "last_updated": now_iso()})
+        status.update({"current_task": task, "current_round": round_id, "execution_status": "task_started", "verification_level": "L0_PLANNED", "user_verification": "not_run", "branch": git["branch"], "base_commit": git["head_commit"], "observed_head_commit": git["head_commit"], "head_commit": git["head_commit"], "workspace_clean": git["workspace_clean"], "github_sync": "not_pushed", "open_issues": [], "last_updated": now_iso()})
         save_status(root, status)
         atomic_json(round_dir / "workspace_manifest.json", manifest(root, git["head_commit"], git["workspace_clean"]), root)
         print(f"已创建 TASK：{task}")

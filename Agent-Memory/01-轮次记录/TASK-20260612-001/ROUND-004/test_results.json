@@ -1,0 +1,32 @@
+[
+  {
+    "command": "python scripts\\import_legacy_cases.py",
+    "exit_code": 0,
+    "result": "真实导入通过；扫描 433 个目录、2430 个文件，识别 9 只股票、19 个案卷，重复 1077，无法解析 0。"
+  },
+  {
+    "command": "python scripts\\import_legacy_cases.py",
+    "exit_code": 0,
+    "result": "增量复跑通过；新增 0，更新 0，未变化 2430。"
+  },
+  {
+    "command": "python -m unittest tests.test_case_library -v",
+    "exit_code": 0,
+    "result": "12 项案卷库专项测试全部 OK。"
+  },
+  {
+    "command": "python -m unittest discover -s tests -v",
+    "exit_code": 0,
+    "result": "32 项完整测试全部 OK。"
+  },
+  {
+    "command": "HTTP GET http://127.0.0.1:8765/api/summary",
+    "exit_code": 0,
+    "result": "返回 200，显示 stock_count=9、case_count=19。"
+  },
+  {
+    "command": "Browser smoke: 首页/搜索/详情/对比/诊断中心",
+    "exit_code": 0,
+    "result": "浏览器实际打开通过；搜索 002558 显示巨人网络 10 个案卷，详情和对比页面可用。"
+  }
+]

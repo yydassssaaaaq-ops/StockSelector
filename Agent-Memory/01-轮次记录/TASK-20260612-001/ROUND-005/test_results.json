@@ -1,0 +1,37 @@
+[
+  {
+    "command": "python -m py_compile src\\stock_selector\\case_library\\importer.py src\\stock_selector\\case_library\\monitor.py src\\stock_selector\\case_library\\webapp.py",
+    "exit_code": 0,
+    "result": "语法检查通过。"
+  },
+  {
+    "command": "python -m unittest tests.test_case_library_monitor -v",
+    "exit_code": 0,
+    "result": "11 项自动增量监控专项测试全部 OK。"
+  },
+  {
+    "command": "python -m unittest discover -s tests -v",
+    "exit_code": 0,
+    "result": "43 项完整测试全部 OK。"
+  },
+  {
+    "command": "python scripts\\import_legacy_cases.py",
+    "exit_code": 0,
+    "result": "真实旧项目导入通过：扫描 433 个目录、2430 个文件，识别 9 只股票、19 个案卷，无法解析 0。"
+  },
+  {
+    "command": "monitor simulation acceptance",
+    "exit_code": 0,
+    "result": "临时旧项目新增 688001 案卷，监控发现 13 个新增文件，538 ms 内进入数据库，自动导入耗时 137 ms，今日变化页显示新增股票 1、新增案卷 1。"
+  },
+  {
+    "command": "HTTP GET http://127.0.0.1:8765/api/monitor/status",
+    "exit_code": 0,
+    "result": "返回 enabled=true、running=true，监控目录为真实旧项目 RadarData 和 HumanView。"
+  },
+  {
+    "command": "Browser smoke: 今日变化页面",
+    "exit_code": 0,
+    "result": "浏览器打开本地工作台通过，今日变化页显示监控状态、自动导入批次、文件监控事件和监控开关。"
+  }
+]

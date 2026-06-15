@@ -4,10 +4,16 @@
 - `project_status.py` 会同时显示“当前真实 HEAD”和“状态文件观察到的 HEAD”；真实 HEAD 以 Git 动态读取为准。
 - 生成 GPT_CONTEXT：`python scripts/build_gpt_context.py`
 - 验证记忆：`python scripts/validate_memory.py`
+- 运行测试：`python -m unittest discover -s tests -v`
+- 导入真实历史案卷：`python scripts/import_legacy_cases.py`
+- 启动历史案卷库工作台：`python scripts/serve_case_library.py --open-browser`
+- 双击启动：`启动历史案卷库.bat`
+- 默认工作台地址：`http://127.0.0.1:8765/`
 - `validate_memory.py` 不再要求状态文件观察到的 HEAD 严格等于当前 HEAD；合法历史 commit 或存在未提交修改时只提示 INFO/WARNING。
 - 开始新 TASK：`python scripts/start_task.py --name "任务名称"`
 - 开始新 ROUND：`python scripts/start_round.py`
 - 结束 ROUND：`python scripts/finish_round.py --tests-json path\to\test_results.json`
 - 创建 CHECKPOINT：`python scripts/create_checkpoint.py --title "阶段标题"`
 - Windows BAT：`scripts\validate_memory.bat`、`scripts\build_gpt_context.bat`、`scripts\project_status.bat`
-- 常见失败：Git 不在 PATH、JSON 损坏、用户未验证却出现 L4 或 L5、状态文件观察到的 HEAD 不是 Git 可识别的 commit。
+- 当前不要求安装 pytest；如直接运行 `python -m pytest` 会因未安装 pytest 失败。
+- 常见失败：Git 不在 PATH、JSON 损坏、新 TASK/ROUND 未重置用户验证状态、用户未验证却出现 L4 或 L5、状态文件观察到的 HEAD 不是 Git 可识别的 commit。

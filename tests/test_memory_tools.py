@@ -119,6 +119,41 @@ class MemoryToolsTest(unittest.TestCase):
                 self.assertIn('python "%SCRIPT%"', text)
                 self.assertIn('py "%SCRIPT%"', text)
 
+    def test_new_task_and_round_reset_user_verification(self):
+        for script_name in ["start_task.py", "start_round.py"]:
+            with self.subTest(script=script_name):
+                text = (SCRIPTS / script_name).read_text(encoding="utf-8")
+                self.assertIn('"verification_level": "L0_PLANNED"', text)
+                self.assertIn('"user_verification": "not_run"', text)
+
+    def test_init_memory_templates_match_current_files(self):
+        import init_memory  # noqa: E402
+
+        expected_templates = {
+            "MEMORY_COMMON": SCRIPTS / "memory_common.py",
+            "BUILD_GPT_CONTEXT": SCRIPTS / "build_gpt_context.py",
+            "BUILD_INDEX": SCRIPTS / "build_index.py",
+            "GIT_SNAPSHOT": SCRIPTS / "git_snapshot.py",
+            "VALIDATE_MEMORY": SCRIPTS / "validate_memory.py",
+            "PROJECT_STATUS": SCRIPTS / "project_status.py",
+            "FINISH_ROUND": SCRIPTS / "finish_round.py",
+            "START_TASK": SCRIPTS / "start_task.py",
+            "START_ROUND": SCRIPTS / "start_round.py",
+            "CREATE_CHECKPOINT": SCRIPTS / "create_checkpoint.py",
+            "TESTS": ROOT / "tests" / "test_memory_tools.py",
+        }
+        for attr, path in expected_templates.items():
+            with self.subTest(template=attr):
+                actual = getattr(init_memory, attr).lstrip("\n")
+                expected = path.read_text(encoding="utf-8")
+                self.assertEqual(actual, expected)
+
+        for script_name in ["project_status", "validate_memory", "build_gpt_context"]:
+            with self.subTest(bat_template=script_name):
+                actual = init_memory.bat(script_name).replace("\r\n", "\n")
+                expected = (SCRIPTS / f"{script_name}.bat").read_text(encoding="utf-8").replace("\r\n", "\n")
+                self.assertEqual(actual, expected)
+
     def test_atomic_json_write(self):
         tmp = ROOT / "logs" / ".test-tmp"
         tmp.mkdir(parents=True, exist_ok=True)

@@ -14,7 +14,7 @@ def main() -> int:
         root = repo_root(); status = load_status(root); task_dir = current_task_dir(root, status)
         round_id = next_round(task_dir); round_dir = task_dir / round_id; round_dir.mkdir(parents=True, exist_ok=False)
         git = workspace_status(root)
-        status.update({"current_round": round_id, "execution_status": "round_started", "verification_level": "L0_PLANNED", "branch": git["branch"], "base_commit": git["head_commit"], "observed_head_commit": git["head_commit"], "head_commit": git["head_commit"], "workspace_clean": git["workspace_clean"], "round_started_at": now_iso(), "start_workspace_clean": git["workspace_clean"], "last_updated": now_iso()})
+        status.update({"current_round": round_id, "execution_status": "round_started", "verification_level": "L0_PLANNED", "user_verification": "not_run", "branch": git["branch"], "base_commit": git["head_commit"], "observed_head_commit": git["head_commit"], "head_commit": git["head_commit"], "workspace_clean": git["workspace_clean"], "github_sync": "not_pushed", "open_issues": [], "round_started_at": now_iso(), "start_workspace_clean": git["workspace_clean"], "last_updated": now_iso()})
         save_status(root, status)
         write_text(round_dir / "ROUND.md", f"# {round_id}\n\n- 所属 TASK：{status.get('current_task')}\n- 起始时间：{status.get('round_started_at')}\n- 起始分支：{git.get('branch')}\n- 起始 HEAD：{git.get('head_commit')}\n", root)
         atomic_json(round_dir / "workspace_manifest.json", manifest(root, git["head_commit"], git["workspace_clean"]), root)
