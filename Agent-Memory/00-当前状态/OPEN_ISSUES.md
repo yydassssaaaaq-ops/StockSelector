@@ -1,6 +1,8 @@
 # OPEN_ISSUES
 
-当前无开放问题。
+当前开放问题：
+
+- GitHub push 失败：HTTPS 连接被重置或无法连接到 github.com:443；本地 commit 已保留，需网络恢复后重试普通 push。
 
 非阻塞观察：
 

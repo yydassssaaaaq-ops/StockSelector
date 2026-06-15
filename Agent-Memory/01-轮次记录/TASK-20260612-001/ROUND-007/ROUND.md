@@ -81,7 +81,8 @@
 
 - 第一条真实历史回测闭环达到 `L2_AGENT_TESTED`：自动测试通过，且真实历史行情回测完整跑通并生成 HTML/JSON/CSV 报告。
 - 用户尚未真实查看报告，因此不标记 `L4_USER_VERIFIED` 或 `L5_CLOSED`。
-- 本轮按协作规则，在测试和状态校验通过后可执行 Git add、Commit 和 Push。
+- 本轮已按协作规则执行 Git add 和 Commit；本地 commit 为 `36dac1328e642cb2c7f84c174a102fcf210059ac`。
+- GitHub push 连续三次失败：两次 `Recv failure: Connection was reset`，一次无法连接到 `github.com:443`；未使用 force push，现场保留。
 
 ## 下一步
 
@@ -89,3 +90,4 @@
 - 恢复或替换字段更完整的历史源，补换手率、成交额、估值和资金流。
 - 加入停牌、涨跌停、行业和财务因子处理。
 - 扩大样本并做参数稳健性检查。
+- 网络恢复后重试普通 `git push`。

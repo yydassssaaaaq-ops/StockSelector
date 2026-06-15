@@ -28,5 +28,20 @@
     "command": "python scripts\\run_minimal_backtest.py --start-date 2025-12-01 --end-date 2026-06-15 --top-n 10 --rebalance-frequency weekly --transaction-cost 0.001 --slippage 0.0005 --universe-source sina --universe-limit 60 --universe-min-amount 800000000 --adjustment qfq --timeout 20 --retries 3",
     "exit_code": 124,
     "result": "工具 180 秒超时；已收缩真实验收样本并改用可复现 CSV 股票池"
+  },
+  {
+    "command": "git push",
+    "exit_code": 1,
+    "result": "失败：Recv failure: Connection was reset"
+  },
+  {
+    "command": "git push",
+    "exit_code": 1,
+    "result": "失败：Recv failure: Connection was reset"
+  },
+  {
+    "command": "git -c http.version=HTTP/1.1 push origin main",
+    "exit_code": 1,
+    "result": "失败：无法连接到 github.com:443"
   }
 ]

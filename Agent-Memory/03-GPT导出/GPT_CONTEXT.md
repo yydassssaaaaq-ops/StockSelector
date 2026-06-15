@@ -7,13 +7,13 @@
 - 项目：StockSelector / A股智能选股系统
 - 当前 TASK：TASK-20260612-001
 - 当前 ROUND：ROUND-007
-- 执行状态：waiting_user_review
+- 执行状态：waiting_github_sync
 - 验证等级：L2_AGENT_TESTED
 - 用户验证：not_run
-- GitHub 同步：pushed
+- GitHub 同步：push_failed_network
 - 当前真实分支：main
-- 当前真实 HEAD：ed4d3f28c6b57879d816822504cc828e67a9d4e8
-- 状态文件观察到的 HEAD：ed4d3f28c6b57879d816822504cc828e67a9d4e8
+- 当前真实 HEAD：36dac1328e642cb2c7f84c174a102fcf210059ac
+- 状态文件观察到的 HEAD：36dac1328e642cb2c7f84c174a102fcf210059ac
 - 工作区干净：False
 
 ## B. Agent 解释
@@ -24,16 +24,16 @@
 - 任务名称：StockSelector 工程闭环与第一条真实 A 股选股业务链
 - 当前 ROUND：ROUND-007
 - 本轮目标：把真实行情规则筛选升级为第一条可被历史数据验证的最小回测闭环。
-- 当前状态：waiting_user_review
+- 当前状态：waiting_github_sync
 - 当前验证等级：L2_AGENT_TESTED
 - 用户验证状态：not_run
-- 当前卡点：无阻塞问题；等待用户查看 `outputs/minimal_backtest/latest.html` 和结构化结果。
+- 当前卡点：本地 commit 已完成，但 GitHub push 连续三次失败，错误为 HTTPS 连接重置或无法连接到 github.com:443；等待网络恢复后重试普通 push。
 - 已完成：中立行情模型拆分、缺失因子动态权重、腾讯前复权历史日线、东财历史日线可选源、Yahoo 沪深 300 基准回退、最小横截面回测引擎、集中指标、HTML/JSON/CSV 报告、真实回测样例和自动化测试。
 - 未完成：用户真实查看验收、无幸存者偏差历史股票池、停牌/涨跌停可成交性、行业/财务因子、正式组合构建、实盘接口。
 - 本轮真实样例：`python scripts\run_real_a_share_screen.py --top 30` 于 2026-06-15 16:48:53 生成 `20260615_164853_sina_snapshot`，读取真实行情 5527 条，过滤后 1665 条，输出候选 30 条。
 - 最新回测样例：`python -u scripts\run_minimal_backtest.py --start-date 2026-01-01 --end-date 2026-06-15 --top-n 10 --rebalance-frequency weekly --transaction-cost 0.001 --slippage 0.0005 --data-source tencent --universe-source csv --universe-csv outputs\a_share_screen\20260615_164853_sina_snapshot\candidates.csv --universe-limit 20 --adjustment qfq --timeout 20 --retries 3` 于 2026-06-15 18:15:58 生成 `20260615_181558_minimal_backtest`。
 - 最新可查看结果：`outputs/minimal_backtest/latest.html`；摘要 JSON：`outputs/minimal_backtest/20260615_181558_minimal_backtest/summary.json`；CSV：`periods.csv`、`holdings.csv`、`failures.csv`、`universe.csv`。
-- GitHub 外循环：规则已改为测试通过且工作区无明显异常后可由 Codex 在当前分支 Commit 并 Push；不得 force push，不创建或切换分支。
+- GitHub 外循环：本地 commit `36dac1328e642cb2c7f84c174a102fcf210059ac` 已创建；push 未成功，未使用 force push，不创建或切换分支。
 
 ### 当前状态
 # CURRENT_STATE
@@ -47,13 +47,15 @@
 - 当前规则边界：排除 ST/退市整理和新股前缀样本；快照筛选要求价格、成交额、换手率、涨跌幅、振幅在阈值内；历史回测使用信号日收盘后可得日线字段并默认下一交易日收盘成交。缺失主力资金、估值或换手率时不按 0 分处理，而是对可用因子动态重新归一并记录完整性。
 - 当前尚不存在的业务能力：无幸存者偏差全历史股票池、行业中性化、财务因子、涨跌停/停牌可成交性精细建模、正式组合构建、涨跌预测、实盘交易、投资建议。
 - 当前限制：用户尚未真实查看本轮报告，因此验证等级保持 `L2_AGENT_TESTED`，不得标记 `L4_USER_VERIFIED` 或 `L5_CLOSED`。
+- Git 状态：本地 commit `36dac1328e642cb2c7f84c174a102fcf210059ac` 已创建；GitHub push 连续三次失败，错误为 HTTPS 连接重置或无法连接到 github.com:443，需网络恢复后重试普通 push。
 - 最近一次完整测试：`python -m unittest discover -s tests -v`，56 项通过。
-- 最近稳定 commit：ed4d3f28c6b57879d816822504cc828e67a9d4e8
+- 最近稳定 commit：36dac1328e642cb2c7f84c174a102fcf210059ac
 - 下一次优先事项：建设无幸存者偏差的历史股票池和停牌/涨跌停可成交性处理，扩大股票池并对比东财字段完整源恢复后的结果。
 
 ### 开放问题
 # OPEN_ISSUES
-当前无开放问题。
+当前开放问题：
+- GitHub push 失败：HTTPS 连接被重置或无法连接到 github.com:443；本地 commit 已保留，需网络恢复后重试普通 push。
 非阻塞观察：
 - 东财 push2 列表接口本轮真实运行时出现连接断开/502，因此默认真实样例改用新浪市场中心 `hs_a`；东财采集器保留为可选源。
 - 新浪源不提供主力净流入字段，报告中相关字段保持空值，不使用模拟值补齐。
@@ -91,48 +93,22 @@
 ### 工作区摘要
 
 tracked 修改：
-- .gitignore
 - Agent-Memory/00-当前状态/CURRENT_STATE.md
 - Agent-Memory/00-当前状态/CURRENT_TASK.md
-- Agent-Memory/00-当前状态/ENVIRONMENT.md
-- Agent-Memory/00-当前状态/FILE_MAP.md
 - Agent-Memory/00-当前状态/OPEN_ISSUES.md
-- Agent-Memory/00-当前状态/PROJECT.md
-- Agent-Memory/00-当前状态/USAGE.md
-- Agent-Memory/03-GPT导出/GPT_CONTEXT.md
-- Agent-Memory/INDEX.md
-- Agent-Memory/MEMORY_STATUS.json
-- README.md
-- docs/a_share_screen_usage.md
-- src/stock_selector/backtest/README.md
-- src/stock_selector/data/README.md
-- src/stock_selector/data/eastmoney.py
-- src/stock_selector/data/sina.py
-- src/stock_selector/reports/README.md
-- src/stock_selector/reports/screen_report.py
-- src/stock_selector/screening/README.md
-- src/stock_selector/screening/momentum_liquidity.py
-
-未跟踪文件：
 - Agent-Memory/01-轮次记录/TASK-20260612-001/ROUND-007/ROUND.md
 - Agent-Memory/01-轮次记录/TASK-20260612-001/ROUND-007/test_results.json
 - Agent-Memory/01-轮次记录/TASK-20260612-001/ROUND-007/workspace_manifest.json
-- docs/minimal_backtest_usage.md
-- scripts/run_minimal_backtest.py
-- src/stock_selector/backtest/engine.py
-- src/stock_selector/backtest/metrics.py
-- src/stock_selector/data/eastmoney_history.py
-- src/stock_selector/data/models.py
-- src/stock_selector/data/tencent_history.py
-- src/stock_selector/data/yahoo_history.py
-- src/stock_selector/reports/backtest_report.py
-- tests/test_minimal_backtest.py
+- Agent-Memory/MEMORY_STATUS.json
+
+未跟踪文件：
+- 无
 
 ## C. 用户验证
 
 - 用户验证状态：not_run
 - 当前不得标记 `L4_USER_VERIFIED` 或 `L5_CLOSED`。
-- 下一步建议：检查自动验证和真实样例结果；若通过且工作区无明显异常，可在当前分支 Commit 并 Push。
+- 下一步建议：任务完成、测试通过且工作区无明显异常后，可由 Codex 在当前分支 Commit 并 Push；同步前不得标记 L5。
 
 ## 建议检查区域
 
