@@ -74,10 +74,15 @@ def flatten_periods(result: BacktestResult) -> list[dict[str, Any]]:
                 "cost_impact": period.cost_impact,
                 "net_return": period.net_return,
                 "benchmark_return": period.benchmark_return,
+                "universe_equal_weight_return": period.universe_equal_weight_return,
+                "single_factor_baseline_return": period.single_factor_baseline_return,
                 "turnover": period.turnover,
                 "trade_count": period.trade_count,
+                "cash_weight": period.cash_weight,
                 "missing_signal_bars": period.missing_signal_bars,
-                "missing_execution_bars": period.missing_execution_bars,
+                "blocked_entries": period.blocked_entries,
+                "blocked_exits": period.blocked_exits,
+                "factor_audit": period.factor_audit,
             }
         )
     return rows
@@ -167,10 +172,14 @@ def period_rows(result: BacktestResult) -> str:
             f"<td>{period.held_count}</td>"
             f"<td>{pct(period.net_return)}</td>"
             f"<td>{pct(period.benchmark_return)}</td>"
+            f"<td>{pct(period.universe_equal_weight_return)}</td>"
+            f"<td>{pct(period.single_factor_baseline_return)}</td>"
             f"<td>{pct(period.cost_impact)}</td>"
             f"<td>{pct(period.turnover)}</td>"
+            f"<td>{pct(period.cash_weight)}</td>"
             f"<td>{period.trade_count}</td>"
-            f"<td>{html.escape(','.join(period.missing_execution_bars))}</td>"
+            f"<td>{html.escape(','.join(period.blocked_entries))}</td>"
+            f"<td>{html.escape(','.join(period.blocked_exits))}</td>"
             "</tr>"
         )
     return "".join(rows)
@@ -189,12 +198,13 @@ def holding_rows(result: BacktestResult, limit: int = 300) -> str:
                 f"<td>{holding.score:.3f}</td>"
                 f"<td>{pct(holding.weight)}</td>"
                 f"<td>{pct(holding.gross_return)}</td>"
-                f"<td>{html.escape(','.join(holding.missing_factors))}</td>"
+                f"<td>{html.escape(json.dumps(holding.score_parts, ensure_ascii=False))}</td>"
                 f"<td>{pct(holding.data_completeness)}</td>"
+                f"<td>{html.escape(';'.join(holding.execution_notes))}</td>"
                 "</tr>"
             )
             if len(rows) >= limit:
-                rows.append("<tr><td colspan=\"9\">更多持仓请查看 holdings.csv</td></tr>")
+                rows.append("<tr><td colspan=\"10\">更多持仓请查看 holdings.csv</td></tr>")
                 return "".join(rows)
     return "".join(rows)
 
@@ -219,13 +229,15 @@ def render_html(result: BacktestResult, paths: BacktestOutputPaths) -> str:
     benchmark_returns = [period.benchmark_return or 0.0 for period in result.periods]
     strategy_curve = [item["strategy_cumulative_return"] or 0.0 for item in result.equity_curve]
     benchmark_curve = [item["benchmark_cumulative_return"] or 0.0 for item in result.equity_curve]
+    equal_curve = [item["universe_equal_weight_cumulative_return"] or 0.0 for item in result.equity_curve]
+    single_curve = [item["single_factor_trend_20d_cumulative_return"] or 0.0 for item in result.equity_curve]
     drawdowns = drawdown_values(strategy_returns)
     benchmark_drawdowns = drawdown_values(benchmark_returns)
     best_period = max(result.periods, key=lambda item: item.net_return or -999.0, default=None)
     worst_period = min(result.periods, key=lambda item: item.net_return or 999.0, default=None)
     return f"""<!doctype html>
 <meta charset="utf-8">
-<title>A股规则最小历史回测</title>
+<title>A股可信历史验证回测</title>
 <style>
 body{{font-family:Segoe UI,'Microsoft YaHei',sans-serif;margin:28px;color:#202933;background:#f7f8fa;line-height:1.55}}
 h1{{margin:0 0 6px;color:#12385f}} h2{{margin-top:26px;color:#12385f}} h3{{margin-bottom:8px;color:#2b455f}}
@@ -237,8 +249,8 @@ table{{width:100%;border-collapse:collapse;background:white;font-size:13px;margi
 pre{{white-space:pre-wrap;background:#fff;border:1px solid #d9e1ea;border-radius:6px;padding:10px;max-height:360px;overflow:auto}}
 svg{{width:100%;height:180px;background:white;border:1px solid #d9e1ea;border-radius:6px}}
 </style>
-<h1>A股规则最小历史回测</h1>
-<div class="muted">区间：{html.escape(result.config.start_date)} 至 {html.escape(result.config.end_date)}；基准：{html.escape(result.config.benchmark_name)}；成交：信号日后下一交易日收盘。</div>
+<h1>A股可信历史验证回测</h1>
+<div class="muted">区间：{html.escape(result.config.start_date)} 至 {html.escape(result.config.end_date)}；策略：{html.escape(result.config.strategy.strategy_id)}；基准：{html.escape(result.config.benchmark_name)}；成交：信号日后下一交易日开盘。</div>
 <p class="warn">本报告基于真实公开历史行情生成，不构成投资建议。若结果较差，仍按原始结果保留。</p>
 
 <h2>回测概览</h2>
@@ -250,11 +262,14 @@ svg{{width:100%;height:180px;background:white;border:1px solid #d9e1ea;border-ra
 </div>
 {metrics_table("策略指标", data["strategy_metrics"])}
 {metrics_table("基准指标", data["benchmark_metrics"])}
+{"".join(metrics_table('基线：' + html.escape(name), metrics.as_dict()) for name, metrics in result.baseline_metrics.items())}
 
-<h2>策略收益与基准收益</h2>
-<p class="muted">蓝线为策略累计收益，灰线为沪深 300 累计收益。</p>
+<h2>策略收益与比较基线</h2>
+<p class="muted">蓝线为策略累计收益，灰线为沪深 300，绿色为股票池等权，橙色为 20 日趋势单因子。</p>
 {svg_line(strategy_curve, stroke="#0d6b99")}
 {svg_line(benchmark_curve, stroke="#6b7280")}
+{svg_line(equal_curve, stroke="#237a57")}
+{svg_line(single_curve, stroke="#bd6b00")}
 
 <h2>最大回撤</h2>
 <p class="muted">蓝线为策略回撤，灰线为基准回撤。</p>
@@ -262,10 +277,10 @@ svg{{width:100%;height:180px;background:white;border:1px solid #d9e1ea;border-ra
 {svg_line(benchmark_drawdowns, stroke="#6b7280")}
 
 <h2>每期选股结果与收益</h2>
-<table><thead><tr><th>信号日</th><th>买入日</th><th>卖出日</th><th>入选</th><th>持仓</th><th>策略收益</th><th>基准收益</th><th>成本滑点</th><th>换手</th><th>交易数</th><th>缺失执行价</th></tr></thead><tbody>{period_rows(result)}</tbody></table>
+<table><thead><tr><th>信号日</th><th>买入日</th><th>卖出日</th><th>入选</th><th>持仓</th><th>策略收益</th><th>基准收益</th><th>等权基线</th><th>单因子基线</th><th>成本滑点</th><th>换手</th><th>现金</th><th>交易数</th><th>买入阻断</th><th>卖出阻断</th></tr></thead><tbody>{period_rows(result)}</tbody></table>
 
 <h2>每期持仓与收益</h2>
-<table><thead><tr><th>信号日</th><th>排名</th><th>代码</th><th>名称</th><th>分数</th><th>权重</th><th>持仓收益</th><th>缺失因子</th><th>完整性</th></tr></thead><tbody>{holding_rows(result)}</tbody></table>
+<table><thead><tr><th>信号日</th><th>排名</th><th>代码</th><th>名称</th><th>分数</th><th>权重</th><th>持仓收益</th><th>因子贡献</th><th>完整性</th><th>执行说明</th></tr></thead><tbody>{holding_rows(result)}</tbody></table>
 
 <h2>交易成本与滑点影响</h2>
 <p>交易成本参数：{pct(result.config.transaction_cost_rate)}；滑点参数：{pct(result.config.slippage_rate)}；平均换手：{pct(result.strategy_metrics.turnover_rate)}；总交易次数：{result.strategy_metrics.trade_count}。</p>
@@ -281,6 +296,9 @@ svg{{width:100%;height:180px;background:white;border:1px solid #d9e1ea;border-ra
 
 <h2>数据源使用情况</h2>
 <pre>{html.escape(json.dumps(result.data_audit, ensure_ascii=False, indent=2))}</pre>
+
+<h2>策略身份与因子定义</h2>
+<pre>{html.escape(json.dumps(result.config.strategy.as_dict(), ensure_ascii=False, indent=2))}</pre>
 
 <h2>回测参数</h2>
 <pre>{html.escape(json.dumps(result.config.as_dict(), ensure_ascii=False, indent=2))}</pre>

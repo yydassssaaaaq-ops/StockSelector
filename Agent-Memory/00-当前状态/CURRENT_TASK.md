@@ -1,16 +1,16 @@
 # CURRENT_TASK
 
 - 当前 TASK：TASK-20260612-001
-- 任务名称：StockSelector 工程闭环与第一条真实 A 股选股业务链
-- 当前 ROUND：ROUND-007
-- 本轮目标：把真实行情规则筛选升级为第一条可被历史数据验证的最小回测闭环。
-- 当前状态：waiting_github_sync
+- 任务名称：StockSelector 可信研究与历史验证系统重构
+- 当前 ROUND：ROUND-008
+- 本轮目标：把历史回测从“固定当前候选池工程样例”重构为 point-in-time、策略身份清晰、数据边界透明、可继续扩展的可信研究底座。
+- 当前状态：waiting_commit_push
 - 当前验证等级：L2_AGENT_TESTED
 - 用户验证状态：not_run
-- 当前卡点：本地 commit 已完成，但 GitHub push 连续三次失败，错误为 HTTPS 连接重置或无法连接到 github.com:443；等待网络恢复后重试普通 push。
-- 已完成：中立行情模型拆分、缺失因子动态权重、腾讯前复权历史日线、东财历史日线可选源、Yahoo 沪深 300 基准回退、最小横截面回测引擎、集中指标、HTML/JSON/CSV 报告、真实回测样例和自动化测试。
-- 未完成：用户真实查看验收、无幸存者偏差历史股票池、停牌/涨跌停可成交性、行业/财务因子、正式组合构建、实盘接口。
-- 本轮真实样例：`python scripts\run_real_a_share_screen.py --top 30` 于 2026-06-15 16:48:53 生成 `20260615_164853_sina_snapshot`，读取真实行情 5527 条，过滤后 1665 条，输出候选 30 条。
-- 最新回测样例：`python -u scripts\run_minimal_backtest.py --start-date 2026-01-01 --end-date 2026-06-15 --top-n 10 --rebalance-frequency weekly --transaction-cost 0.001 --slippage 0.0005 --data-source tencent --universe-source csv --universe-csv outputs\a_share_screen\20260615_164853_sina_snapshot\candidates.csv --universe-limit 20 --adjustment qfq --timeout 20 --retries 3` 于 2026-06-15 18:15:58 生成 `20260615_181558_minimal_backtest`。
-- 最新可查看结果：`outputs/minimal_backtest/latest.html`；摘要 JSON：`outputs/minimal_backtest/20260615_181558_minimal_backtest/summary.json`；CSV：`periods.csv`、`holdings.csv`、`failures.csv`、`universe.csv`。
-- GitHub 外循环：本地 commit `36dac1328e642cb2c7f84c174a102fcf210059ac` 已创建；push 未成功，未使用 force push，不创建或切换分支。
+- 当前卡点：本轮代码、文档、真实验收和自动化测试已完成；仍需按协作规则执行普通 commit 和 push，并等待用户真实查看验收。
+- 已完成：实时扫描策略与历史验证策略分离；新增 `historical_ohlcv_v1` 历史 OHLCV 固定因子体系；默认股票池不再使用当天候选 CSV 或今天成交额/涨跌幅/评分过滤过去；新增下一开盘执行、无量/涨跌停近似阻断、现金权重、基线比较和完整审计报告；新增可信性测试。
+- 未完成：用户真实查看验收、真正无幸存者偏差历史股票池、历史上市/退市/停牌完整建模、行业/财务/资金流因子、正式组合构建和实盘接口。
+- 最新真实验收：`python -u scripts\run_minimal_backtest.py --start-date 2026-01-01 --end-date 2026-06-15 --top-n 5 --rebalance-frequency weekly --execution-timing next_open --transaction-cost 0.001 --slippage 0.0005 --data-source tencent --universe-source sina --universe-filter-mode broad_current_listed --universe-limit 30 --adjustment qfq --timeout 15 --retries 1` 于 2026-06-15 23:48:54 生成 `20260615_234854_minimal_backtest`。
+- 最新可查看结果：`outputs/minimal_backtest/latest.html`；摘要 JSON：`outputs/minimal_backtest/20260615_234854_minimal_backtest/summary.json`；CSV：`periods.csv`、`holdings.csv`、`failures.csv`、`universe.csv`。
+- 最新验收结论：策略累计收益 -10.72%，沪深 300 +1.25%，股票池等权基线 -3.75%，20 日趋势单因子基线 -8.70%；当前结果证明可信回测链路可运行，不证明策略有效。
+- GitHub 外循环：本轮尚未提交/推送；禁止 force push，不创建或切换分支。

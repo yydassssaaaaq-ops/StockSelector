@@ -6,8 +6,8 @@
 - 验证记忆：`python scripts/validate_memory.py`
 - 运行测试：`python -m unittest discover -s tests -v`
 - 运行真实 A 股选股闭环：`python scripts\run_real_a_share_screen.py --top 30`
-- 运行最小历史回测闭环：`python scripts\run_minimal_backtest.py`
-- 本轮真实回测复现命令：`python -u scripts\run_minimal_backtest.py --start-date 2026-01-01 --end-date 2026-06-15 --top-n 10 --rebalance-frequency weekly --transaction-cost 0.001 --slippage 0.0005 --data-source tencent --universe-source csv --universe-csv outputs\a_share_screen\20260615_164853_sina_snapshot\candidates.csv --universe-limit 20 --adjustment qfq --timeout 20 --retries 3`
+- 运行可信历史验证回测：`python scripts\run_minimal_backtest.py`
+- ROUND-008 真实回测复现命令：`python -u scripts\run_minimal_backtest.py --start-date 2026-01-01 --end-date 2026-06-15 --top-n 5 --rebalance-frequency weekly --execution-timing next_open --transaction-cost 0.001 --slippage 0.0005 --data-source tencent --universe-source sina --universe-filter-mode broad_current_listed --universe-limit 30 --adjustment qfq --timeout 15 --retries 1`
 - 导入真实历史案卷：`python scripts/import_legacy_cases.py`
 - 启动历史案卷库工作台：`python scripts/serve_case_library.py --open-browser`
 - 双击启动：`启动历史案卷库.bat`
@@ -19,7 +19,9 @@
 - 创建 CHECKPOINT：`python scripts/create_checkpoint.py --title "阶段标题"`
 - Windows BAT：`scripts\validate_memory.bat`、`scripts\build_gpt_context.bat`、`scripts\project_status.bat`
 - 当前不要求安装 pytest；如直接运行 `python -m pytest` 会因未安装 pytest 失败。
-- 当前最小回测默认股票历史源为腾讯前复权日 K；东财历史源可选但本轮真实运行断连，沪深 300 基准会在东财失败后回退 Yahoo Finance。
-- 回测报告默认输出到 `outputs/minimal_backtest/latest.html`，结构化输出在对应 run 目录的 `summary.json` 和 CSV 文件中。
+- 当前可信回测默认股票历史源为腾讯前复权日 K；东财历史源可选但本轮真实运行基准请求断连，沪深 300 基准会在东财失败后回退 Yahoo Finance。
+- 默认历史股票池为 `broad_current_listed`：只用当前快照取得仍上市 A 股代码/名称/交易所/板块，不用今天成交额、涨跌幅、评分或候选排名过滤过去；仍有幸存者偏差。
+- CSV 股票池需显式使用 `--universe-source csv --universe-csv <path>`，报告会标记 `csv_debug`，不能作为默认策略验证证据。
+- 回测报告默认输出到 `outputs/minimal_backtest/latest.html`，结构化输出在对应 run 目录的 `summary.json` 和 CSV 文件中；最新真实验收 run_id 为 `20260615_234854_minimal_backtest`。
 - Git 协作：任务完成、测试通过且工作区内容确认无明显异常后，允许 Codex 在当前分支执行 `git add`、Commit 和 Push；不得 force push，不创建或切换分支。
 - 常见失败：Git 不在 PATH、JSON 损坏、新 TASK/ROUND 未重置用户验证状态、用户未验证却出现 L4 或 L5、状态文件观察到的 HEAD 不是 Git 可识别的 commit。

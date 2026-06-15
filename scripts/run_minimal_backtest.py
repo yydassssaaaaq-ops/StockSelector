@@ -39,18 +39,25 @@ def default_start_end() -> tuple[str, str]:
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     start_date, end_date = default_start_end()
-    parser = argparse.ArgumentParser(description="运行真实历史行情驱动的最小 A 股规则回测闭环。")
+    parser = argparse.ArgumentParser(description="运行 point-in-time 历史行情驱动的可信 A 股研究回测。")
     parser.add_argument("--start-date", default=start_date, help="回测开始日期，YYYY-MM-DD。")
     parser.add_argument("--end-date", default=end_date, help="回测结束日期，YYYY-MM-DD。")
     parser.add_argument("--top-n", type=int, default=10, help="每期持仓数量。")
     parser.add_argument("--rebalance-frequency", choices=["daily", "weekly"], default="weekly", help="调仓频率。")
+    parser.add_argument("--execution-timing", choices=["next_open", "next_close"], default="next_open", help="信号日后的执行价格口径，默认下一交易日开盘。")
     parser.add_argument("--transaction-cost", type=float, default=0.001, help="单边交易成本率。")
     parser.add_argument("--slippage", type=float, default=0.0005, help="单边滑点率。")
     parser.add_argument("--data-source", choices=["auto", "eastmoney", "tencent"], default="tencent", help="历史行情数据源；当前默认腾讯前复权日线，auto 会先试东财再回退腾讯。")
-    parser.add_argument("--universe-source", choices=["auto", "sina", "eastmoney", "csv"], default="sina", help="股票池来源。")
+    parser.add_argument("--universe-source", choices=["auto", "sina", "eastmoney", "csv"], default="sina", help="股票池代码来源。csv 为显式调试模式。")
+    parser.add_argument(
+        "--universe-filter-mode",
+        choices=["broad_current_listed", "snapshot_liquidity"],
+        default="broad_current_listed",
+        help="股票池过滤方式。默认只使用当前仍上市代码与名称，不用今天成交额/涨跌幅/评分过滤过去。",
+    )
     parser.add_argument("--universe-csv", default="", help="可复用股票池 CSV，需包含 code/name/exchange/board。")
     parser.add_argument("--universe-limit", type=int, default=80, help="股票池最多保留多少只，默认控制真实请求成本。")
-    parser.add_argument("--universe-min-amount", type=float, default=500_000_000.0, help="实时股票池最低成交额。")
+    parser.add_argument("--universe-min-amount", type=float, default=500_000_000.0, help="仅在 snapshot_liquidity 模式下使用的实时最低成交额。")
     parser.add_argument("--adjustment", choices=["qfq", "none", "hfq"], default="qfq", help="股票历史价格复权方式。")
     parser.add_argument("--timeout", type=float, default=20.0, help="外部请求超时时间。")
     parser.add_argument("--retries", type=int, default=2, help="历史行情请求失败后的重试次数。")
@@ -114,6 +121,32 @@ def select_universe_from_quotes(
     ]
 
 
+def select_broad_current_listed_universe(
+    quotes: list[AShareQuote],
+    *,
+    limit: int,
+) -> list[dict[str, str]]:
+    config = ScreenConfig()
+    accepted: dict[str, AShareQuote] = {}
+    for quote in quotes:
+        if not quote.code or len(quote.code) != 6:
+            continue
+        if quote.exchange not in {"SH", "SZ", "BJ"}:
+            continue
+        if is_excluded_name(quote.name, config):
+            continue
+        accepted.setdefault(quote.code, quote)
+    return [
+        {
+            "code": quote.code,
+            "name": quote.name,
+            "exchange": quote.exchange,
+            "board": quote.board,
+        }
+        for quote in sorted(accepted.values(), key=lambda item: item.code)[:limit]
+    ]
+
+
 def read_universe_csv(path: Path, limit: int) -> list[dict[str, str]]:
     rows: list[dict[str, str]] = []
     with path.open("r", encoding="utf-8-sig", newline="") as handle:
@@ -142,18 +175,34 @@ def build_universe(args: argparse.Namespace) -> tuple[list[dict[str, str]], dict
         rows = read_universe_csv(Path(args.universe_csv), args.universe_limit)
         return rows, {
             "provider": "csv",
+            "universe_mode": "csv_debug",
             "source_file": args.universe_csv,
             "universe_limit": args.universe_limit,
             "selected_count": len(rows),
+            "research_warning": "fixed CSV universe is explicit debug mode and is not default strategy validation",
         }
     quotes, metadata = fetch_snapshot_quotes(args.universe_source, args.timeout)
-    rows = select_universe_from_quotes(
-        quotes,
-        limit=args.universe_limit,
-        min_amount=args.universe_min_amount,
-    )
+    if args.universe_filter_mode == "snapshot_liquidity":
+        rows = select_universe_from_quotes(
+            quotes,
+            limit=args.universe_limit,
+            min_amount=args.universe_min_amount,
+        )
+        metadata["universe_mode"] = "snapshot_liquidity"
+        metadata["research_warning"] = (
+            "uses current snapshot amount/turnover to shape the historical universe; "
+            "kept for diagnostics, not default strategy validation"
+        )
+    else:
+        rows = select_broad_current_listed_universe(quotes, limit=args.universe_limit)
+        metadata["universe_mode"] = "broad_current_listed"
+        metadata["research_warning"] = (
+            "uses current listed A-share code identity only; still has survivorship/current-status bias "
+            "because historical delisted names are not included"
+        )
     metadata["universe_limit"] = args.universe_limit
-    metadata["universe_min_amount"] = args.universe_min_amount
+    metadata["universe_filter_mode"] = args.universe_filter_mode
+    metadata["universe_min_amount"] = args.universe_min_amount if args.universe_filter_mode == "snapshot_liquidity" else None
     metadata["selected_count"] = len(rows)
     return rows, metadata
 
@@ -257,17 +306,23 @@ def main(argv: list[str] | None = None) -> int:
         end_date=args.end_date,
         top_n=args.top_n,
         rebalance_frequency=args.rebalance_frequency,
+        execution_timing=args.execution_timing,
         transaction_cost_rate=args.transaction_cost,
         slippage_rate=args.slippage,
         adjustment=args.adjustment,
         data_source=args.data_source,
         universe_size=len(universe),
         universe_construction=(
-            f"{universe_metadata.get('provider')} current snapshot filtered by amount >= "
-            f"{args.universe_min_amount}, limit {args.universe_limit}; historical delisted names are not included"
+            f"{universe_metadata.get('provider')} {universe_metadata.get('universe_mode')} "
+            f"limit {args.universe_limit}; historical delisted names are not included"
+        ),
+        universe_mode=str(universe_metadata.get("universe_mode") or args.universe_filter_mode),
+        fixed_current_universe=True,
+        survivorship_bias=(
+            "current listed A-share transition universe; no current price, amount, score or candidate rank "
+            "is used in default broad_current_listed mode, but delisted historical names are absent"
         ),
         periods_per_year=periods_per_year(args.rebalance_frequency),
-        allow_missing_turnover_rate=True,
     )
     result = run_cross_sectional_backtest(
         series_by_code=series_by_code,
@@ -291,9 +346,11 @@ def main(argv: list[str] | None = None) -> int:
         "summary_json": str(paths.summary_json),
         "periods_csv": str(paths.periods_csv),
         "holdings_csv": str(paths.holdings_csv),
+        "failures_csv": str(paths.failures_csv),
         "universe_csv": str(paths.universe_csv),
         "strategy_metrics": result.strategy_metrics.as_dict(),
         "benchmark_metrics": result.benchmark_metrics.as_dict(),
+        "baseline_metrics": {key: value.as_dict() for key, value in result.baseline_metrics.items()},
         "conclusion": result.conclusion,
         "data_audit": result.data_audit,
     }

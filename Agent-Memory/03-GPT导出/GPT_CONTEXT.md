@@ -6,14 +6,14 @@
 
 - 项目：StockSelector / A股智能选股系统
 - 当前 TASK：TASK-20260612-001
-- 当前 ROUND：ROUND-007
-- 执行状态：waiting_github_sync
+- 当前 ROUND：ROUND-008
+- 执行状态：waiting_commit_push
 - 验证等级：L2_AGENT_TESTED
 - 用户验证：not_run
-- GitHub 同步：push_failed_network
+- GitHub 同步：not_pushed
 - 当前真实分支：main
-- 当前真实 HEAD：36dac1328e642cb2c7f84c174a102fcf210059ac
-- 状态文件观察到的 HEAD：36dac1328e642cb2c7f84c174a102fcf210059ac
+- 当前真实 HEAD：2f1136eee9600ad056967434c74a9aca85a1a521
+- 状态文件观察到的 HEAD：2f1136eee9600ad056967434c74a9aca85a1a521
 - 工作区干净：False
 
 ## B. Agent 解释
@@ -21,99 +21,118 @@
 ### 当前任务
 # CURRENT_TASK
 - 当前 TASK：TASK-20260612-001
-- 任务名称：StockSelector 工程闭环与第一条真实 A 股选股业务链
-- 当前 ROUND：ROUND-007
-- 本轮目标：把真实行情规则筛选升级为第一条可被历史数据验证的最小回测闭环。
-- 当前状态：waiting_github_sync
+- 任务名称：StockSelector 可信研究与历史验证系统重构
+- 当前 ROUND：ROUND-008
+- 本轮目标：把历史回测从“固定当前候选池工程样例”重构为 point-in-time、策略身份清晰、数据边界透明、可继续扩展的可信研究底座。
+- 当前状态：waiting_commit_push
 - 当前验证等级：L2_AGENT_TESTED
 - 用户验证状态：not_run
-- 当前卡点：本地 commit 已完成，但 GitHub push 连续三次失败，错误为 HTTPS 连接重置或无法连接到 github.com:443；等待网络恢复后重试普通 push。
-- 已完成：中立行情模型拆分、缺失因子动态权重、腾讯前复权历史日线、东财历史日线可选源、Yahoo 沪深 300 基准回退、最小横截面回测引擎、集中指标、HTML/JSON/CSV 报告、真实回测样例和自动化测试。
-- 未完成：用户真实查看验收、无幸存者偏差历史股票池、停牌/涨跌停可成交性、行业/财务因子、正式组合构建、实盘接口。
-- 本轮真实样例：`python scripts\run_real_a_share_screen.py --top 30` 于 2026-06-15 16:48:53 生成 `20260615_164853_sina_snapshot`，读取真实行情 5527 条，过滤后 1665 条，输出候选 30 条。
-- 最新回测样例：`python -u scripts\run_minimal_backtest.py --start-date 2026-01-01 --end-date 2026-06-15 --top-n 10 --rebalance-frequency weekly --transaction-cost 0.001 --slippage 0.0005 --data-source tencent --universe-source csv --universe-csv outputs\a_share_screen\20260615_164853_sina_snapshot\candidates.csv --universe-limit 20 --adjustment qfq --timeout 20 --retries 3` 于 2026-06-15 18:15:58 生成 `20260615_181558_minimal_backtest`。
-- 最新可查看结果：`outputs/minimal_backtest/latest.html`；摘要 JSON：`outputs/minimal_backtest/20260615_181558_minimal_backtest/summary.json`；CSV：`periods.csv`、`holdings.csv`、`failures.csv`、`universe.csv`。
-- GitHub 外循环：本地 commit `36dac1328e642cb2c7f84c174a102fcf210059ac` 已创建；push 未成功，未使用 force push，不创建或切换分支。
+- 当前卡点：本轮代码、文档、真实验收和自动化测试已完成；仍需按协作规则执行普通 commit 和 push，并等待用户真实查看验收。
+- 已完成：实时扫描策略与历史验证策略分离；新增 `historical_ohlcv_v1` 历史 OHLCV 固定因子体系；默认股票池不再使用当天候选 CSV 或今天成交额/涨跌幅/评分过滤过去；新增下一开盘执行、无量/涨跌停近似阻断、现金权重、基线比较和完整审计报告；新增可信性测试。
+- 未完成：用户真实查看验收、真正无幸存者偏差历史股票池、历史上市/退市/停牌完整建模、行业/财务/资金流因子、正式组合构建和实盘接口。
+- 最新真实验收：`python -u scripts\run_minimal_backtest.py --start-date 2026-01-01 --end-date 2026-06-15 --top-n 5 --rebalance-frequency weekly --execution-timing next_open --transaction-cost 0.001 --slippage 0.0005 --data-source tencent --universe-source sina --universe-filter-mode broad_current_listed --universe-limit 30 --adjustment qfq --timeout 15 --retries 1` 于 2026-06-15 23:48:54 生成 `20260615_234854_minimal_backtest`。
+- 最新可查看结果：`outputs/minimal_backtest/latest.html`；摘要 JSON：`outputs/minimal_backtest/20260615_234854_minimal_backtest/summary.json`；CSV：`periods.csv`、`holdings.csv`、`failures.csv`、`universe.csv`。
+- 最新验收结论：策略累计收益 -10.72%，沪深 300 +1.25%，股票池等权基线 -3.75%，20 日趋势单因子基线 -8.70%；当前结果证明可信回测链路可运行，不证明策略有效。
+- GitHub 外循环：本轮尚未提交/推送；禁止 force push，不创建或切换分支。
 
 ### 当前状态
 # CURRENT_STATE
-- 当前阶段：第一条真实 A 股选股业务链已从快照筛选推进到最小历史回测闭环。
-- 当前可运行能力：真实 A 股行情快照采集、规则筛选打分、候选 CSV、原始行情 CSV、摘要 JSON、HTML 报告；真实历史日线获取、前复权缓存、信号生成、收益回放、沪深 300 基准比较、回测 HTML/JSON/CSV 报告；历史案卷库导入、SQLite 索引、文件监控和本地工作台仍保留可用。
+- 当前阶段：历史回测链路已从 ROUND-007 的最小工程样例升级为 ROUND-008 的可信研究底座。
+- 当前可运行能力：真实 A 股行情快照采集、实时规则扫描、原始行情/候选 CSV/JSON/HTML 输出；历史 OHLCV 固定因子计算、point-in-time 信号、横截面百分位评分、下一开盘执行、日线级不可成交近似、沪深 300/股票池等权/单因子基线比较、HTML/JSON/CSV 审计报告；历史案卷库导入、SQLite 索引、文件监控和本地工作台仍保留可用。
 - 当前正常命令：`python scripts\run_real_a_share_screen.py --top 30`、`python scripts\run_minimal_backtest.py`、`python scripts\import_legacy_cases.py`、`python scripts\serve_case_library.py --open-browser`、`python -m unittest discover -s tests -v`、`python scripts\validate_memory.py`。
-- 当前真实行情数据：新浪市场中心 `hs_a` 快照，2026-06-15 真实样例读取 5527 条 A 股行情，过滤后 1665 条，输出 Top 30；Top 5 为 000725 京东方Ａ、002185 华天科技、000630 铜陵有色、000021 深科技、000737 北方铜业。
-- 当前真实样例输出：`outputs/a_share_screen/latest.html`、`outputs/a_share_screen/20260615_164853_sina_snapshot/report.html`、`outputs/a_share_screen/20260615_164853_sina_snapshot/candidates.csv`、`outputs/a_share_screen/20260615_164853_sina_snapshot/summary.json`、`data/raw/a_share_quotes/20260615_164853_sina_snapshot_quotes.csv`。
-- 当前真实回测样例：`20260615_181558_minimal_backtest`，区间 2026-01-01 至 2026-06-15，股票池为上一轮真实新浪候选 CSV 前 20 只，股票历史源为腾讯前复权日 K，基准为沪深 300；东财基准源断连后回退 Yahoo Finance `000300.SS`。
-- 当前回测结果：有效期数 21；策略累计收益 18.78%，年化收益 53.13%，最大回撤 23.15%，年化波动率 48.54%，夏普 1.127，胜率 61.90%，平均单期收益 1.05%，最好单期 13.75%，最差单期 -12.62%，平均换手 99.05%，交易次数 215；沪深 300 累计收益 2.13%，最大回撤 7.76%；相对基准超额收益 16.65%。结论为有限样本内策略累计收益高于基准，但回撤风险需要继续检查。
-- 当前规则边界：排除 ST/退市整理和新股前缀样本；快照筛选要求价格、成交额、换手率、涨跌幅、振幅在阈值内；历史回测使用信号日收盘后可得日线字段并默认下一交易日收盘成交。缺失主力资金、估值或换手率时不按 0 分处理，而是对可用因子动态重新归一并记录完整性。
-- 当前尚不存在的业务能力：无幸存者偏差全历史股票池、行业中性化、财务因子、涨跌停/停牌可成交性精细建模、正式组合构建、涨跌预测、实盘交易、投资建议。
+- 当前实时扫描策略：`screening/momentum_liquidity.py`，用于实时快照，不作为历史验证策略复用。
+- 当前历史验证策略：`historical_ohlcv_v1`，只使用信号日及以前 OHLCV 派生因子；因子包括 20 日趋势、60 日趋势、20 日均线位置、20 日成交额中位数、20 日波动率、20 日最大回撤；固定权重，横截面百分位标准化，窗口不足或数据缺失时剔除本期样本。
+- 当前默认股票池：`broad_current_listed`，通过当前快照仅取得仍上市 A 股代码、名称、交易所和板块；不使用今天成交额、涨跌幅、实时评分或候选排名过滤过去；仍存在幸存者偏差。
+- 当前显式调试模式：`--universe-source csv` 会标记为 `csv_debug`；`--universe-filter-mode snapshot_liquidity` 会标记为当前快照流动性过滤诊断模式，均不应作为默认策略验证证据。
+- 当前执行假设：信号日收盘后形成候选；默认下一交易日开盘执行；持有到下一调仓对应的下一交易日开盘；交易成本和滑点按换手扣减；无量、缺价、涨停难买、跌停难卖和延迟退出记录在报告中；部分无法成交的权重保留为现金。
+- 当前真实验收输出：`outputs/minimal_backtest/latest.html`、`outputs/minimal_backtest/20260615_234854_minimal_backtest/report.html`、`summary.json`、`periods.csv`、`holdings.csv`、`failures.csv`、`universe.csv`。
+- 当前真实验收数据：新浪 `hs_a` 快照读取 5527 条，默认宽代码池前 30 只；腾讯前复权日 K 股票历史 30/30 成功，缓存命中 30；东财沪深 300 基准请求失败后回退 Yahoo Finance `000300.SS`，记录 `failed_benchmark_requests=1`。
+- 当前真实验收结果：2026-01-01 至 2026-06-15，周频 Top5，21 个回测窗口；策略累计收益 -10.72%，年化收益 -24.49%，最大回撤 13.40%，夏普 -1.417，胜率 14.29%，交易次数 36，平均换手 34.29%；沪深 300 累计收益 +1.25%；股票池等权基线 -3.75%；20 日趋势单因子基线 -8.70%。
+- 当前结论边界：本轮结果证明可信历史验证链路可运行，并能揭示策略未跑赢基准/简单基线；不证明策略有效、不构成投资建议、不构成交易信号。
+- 当前自动测试：`python -m unittest discover -s tests -v`，61 项通过；`tests.test_minimal_backtest` 当前 14 项通过，覆盖未来数据隔离、默认非 CSV 股票池、窗口不足、下一开盘执行、无量/涨跌停约束、现金权重和审计字段。
 - 当前限制：用户尚未真实查看本轮报告，因此验证等级保持 `L2_AGENT_TESTED`，不得标记 `L4_USER_VERIFIED` 或 `L5_CLOSED`。
-- Git 状态：本地 commit `36dac1328e642cb2c7f84c174a102fcf210059ac` 已创建；GitHub push 连续三次失败，错误为 HTTPS 连接重置或无法连接到 github.com:443，需网络恢复后重试普通 push。
-- 最近一次完整测试：`python -m unittest discover -s tests -v`，56 项通过。
-- 最近稳定 commit：36dac1328e642cb2c7f84c174a102fcf210059ac
-- 下一次优先事项：建设无幸存者偏差的历史股票池和停牌/涨跌停可成交性处理，扩大股票池并对比东财字段完整源恢复后的结果。
+- Git 状态：本轮起始 HEAD 为 `2f1136eee9600ad056967434c74a9aca85a1a521`，起始工作区干净；当前存在本轮未提交修改，待普通 commit/push。
+- 最近稳定 commit：2f1136eee9600ad056967434c74a9aca85a1a521
+- 下一次优先事项：建设真正 point-in-time 历史股票池；补齐行业/财务/流通市值/换手率/真实成交额历史字段；建立组合构建和风险约束层。
 
 ### 开放问题
 # OPEN_ISSUES
 当前开放问题：
-- GitHub push 失败：HTTPS 连接被重置或无法连接到 github.com:443；本地 commit 已保留，需网络恢复后重试普通 push。
+- GitHub 同步尚未完成：本轮修改尚未 commit/push；需在测试和记忆校验通过后执行普通 git add、commit、push，不得 force push。
+- 用户尚未真实查看 ROUND-008 报告，因此不得标记 L4_USER_VERIFIED 或 L5_CLOSED。
 非阻塞观察：
-- 东财 push2 列表接口本轮真实运行时出现连接断开/502，因此默认真实样例改用新浪市场中心 `hs_a`；东财采集器保留为可选源。
-- 新浪源不提供主力净流入字段，报告中相关字段保持空值，不使用模拟值补齐。
-- 东财 `push2his` 历史日 K 在本轮真实回测时对股票和沪深 300 基准均出现连接断开；股票历史默认改用腾讯前复权日 K，沪深 300 基准回退 Yahoo Finance `000300.SS`。
-- 腾讯历史源不提供换手率、主力资金和估值字段；回测评分已用动态可用因子权重降置信处理，报告中记录缺失因子和完整性。
-- 当前回测股票池来自上一轮真实新浪候选 CSV 的当前样本，历史退市股票未纳入，存在幸存者偏差。
-- 当前回测结果未经用户真实查看验收，不得视为投资建议或交易信号。
+- 默认股票池已不再使用当天候选 CSV 或今天成交额过滤过去，但仍是当前仍上市代码池过渡方案，历史退市股票和历史成分变化尚未纳入，仍存在幸存者偏差。
+- 东财 `push2his` 对沪深 300 基准在本轮真实验收中仍出现连接断开，已真实回退 Yahoo Finance `000300.SS` 并记录失败；东财历史源保留为可选源。
+- 腾讯历史源成交额由成交手数乘价格派生，换手率、主力资金和估值字段仍缺失；ROUND-008 历史策略不再使用这些实时字段伪装成同一模型。
+- 日线级涨跌停/停牌处理只是近似，不能替代逐笔盘口或真实撮合数据。
+- ROUND-007 的 18.78% 回测结果已保留为固定当前候选 CSV 下的历史工程样例，不能作为策略有效性证据。
 
 ### 最近 ROUND
-# ROUND-007
+# ROUND-008
 ## 基本信息
 - 所属 TASK：TASK-20260612-001
-- ROUND ID：ROUND-007
-- 触发来源：用户要求把当前真实 A 股规则筛选升级为可被历史数据验证的最小回测闭环。
-- 本轮目标：完成历史数据获取 -> 信号生成 -> 收益回放 -> 基准比较 -> 报告输出 -> 自动测试。
-- 起始分支：main
-- 起始 HEAD：ed4d3f28c6b57879d816822504cc828e67a9d4e8
-- 是否切换或新建分支：否
-## 架构审计结论
-- 发现 `AShareQuote` 绑定在 `data/eastmoney.py` 中，新浪源反向依赖东财模块；本轮已拆到 `data/models.py`。
-- 新浪和东财快照字段已统一映射到中立 `AShareQuote`。
-- 原评分逻辑会把缺失主力资金按 0 分处理，导致新浪源分数不可比；本轮改为动态可用因子权重并记录缺失因子、有效权重和完整性。
-- 新浪源主力资金为空时不再假装总分完全可比。
-- 当前筛选规则已可通过历史 `DailyBar.to_quote()` 在历史日期重复执行；历史源缺失换手率时需显式允许并降置信。
-- 回测报告记录数据源、请求/复权方式、参数、样本数量、失败原因和偏差说明。
-## 本轮修改
-- 新增 `src/stock_selector/data/models.py`：中立行情模型。
-- 新增 `src/stock_selector/data/eastmoney_history.py`：东财历史日 K，支持前复权/后复权/不复权、缓存和失败记录。
-- 新增 `src/stock_selector/data/tencent_history.py`：腾讯历史日 K，当前默认股票历史源，支持前复权。
-- 新增 `src/stock_selector/data/yahoo_history.py`：Yahoo Finance 指数日线，作为沪深 300 基准回退。
-- 新增 `src/stock_selector/backtest/engine.py`：最小横截面选股回测引擎。
-- 新增 `src/stock_selector/backtest/metrics.py`：集中管理收益、风险、胜率、换手和超额收益指标。
-- 新增 `src/stock_selector/reports/backtest_report.py`：生成 HTML/JSON/CSV 回测报告。
+- ROUND ID：ROUND-008
+- 任务名称：StockSelector 可信研究与历史验证系统重构
+- 触发来源：用户要求将当前最小历史回测升级为时间点可信、策略身份清晰、数据边界透明的研究底座。
+- 本轮起始分支：main
+- 本轮起始 HEAD：2f1136eee9600ad056967434c74a9aca85a1a521
+- 起始工作区是否干净：是
+- 是否创建或切换分支：否
+## 独立审计结论
+- 用户指出的核心问题成立：ROUND-007 的 `20260615_181558_minimal_backtest` 使用 2026-06-15 当天候选 CSV 前 20 只股票向前回测，只能说明旧程序能运行，不能作为策略有效性证据。
+- 用户指出的策略身份漂移成立：旧历史回测复用实时 `momentum_liquidity` 评分器，并通过缺失因子动态重配继续打分；历史源缺少主力资金、估值、换手率等字段时，实际已不再是同一套实时策略。
+- 用户指出的单日动量倾向成立：旧历史回测主要依赖历史日线 `to_quote()` 转成快照字段，趋势结构和窗口质量不足。
+- 用户指出的执行简化成立：旧引擎仅支持 `next_close`，没有独立记录无量、缺价、涨跌停近似阻断、现金权重和延迟退出。
+- 额外发现：报告审计字段不足以同时说明股票池来源、策略身份、因子覆盖、基线比较和“能证明/不能证明”边界。
+- 额外发现：记忆文件记录的上一轮观察 HEAD 为 `36dac1328e642cb2c7f84c174a102fcf210059ac`，但本轮真实起始 HEAD 已是 `2f1136eee9600ad056967434c74a9aca85a1a521`；这是上一轮后续本地 commit，非本轮旧改动混入。本轮起始工作区干净。
+## 设计取舍
+- 保留实时扫描策略 `momentum_liquidity`，但不再把它伪装成历史验证策略。
+- 新增固定历史策略 `historical_ohlcv_v1`，只使用信号日及以前 OHLCV 派生因子，并用固定权重和横截面百分位评分。
+- 默认股票池改为当前仍上市宽 A 股代码池过渡方案，只用当前快照中的代码、名称、交易所、板块，不使用今天成交额、涨跌幅、实时评分或候选排名过滤过去。
+- 固定 CSV 股票池保留为 `csv_debug` 显式调试模式，报告中标记其不能作为策略验证证据。
+- 默认执行改为下一交易日开盘，日线近似处理无量、缺价、涨停难买、跌停难卖和延迟退出；无法精确替代盘口可成交性，报告中如实披露。
+- 本轮没有引入 LLM 选股、机器学习调参、实盘交易或收益优化参数搜索。
 
 ### 工作区摘要
 
 tracked 修改：
 - Agent-Memory/00-当前状态/CURRENT_STATE.md
 - Agent-Memory/00-当前状态/CURRENT_TASK.md
+- Agent-Memory/00-当前状态/ENVIRONMENT.md
+- Agent-Memory/00-当前状态/FILE_MAP.md
 - Agent-Memory/00-当前状态/OPEN_ISSUES.md
-- Agent-Memory/01-轮次记录/TASK-20260612-001/ROUND-007/ROUND.md
-- Agent-Memory/01-轮次记录/TASK-20260612-001/ROUND-007/test_results.json
-- Agent-Memory/01-轮次记录/TASK-20260612-001/ROUND-007/workspace_manifest.json
+- Agent-Memory/00-当前状态/PROJECT.md
+- Agent-Memory/00-当前状态/USAGE.md
+- Agent-Memory/03-GPT导出/GPT_CONTEXT.md
+- Agent-Memory/INDEX.md
 - Agent-Memory/MEMORY_STATUS.json
+- README.md
+- docs/ARCHITECTURE.md
+- docs/minimal_backtest_usage.md
+- scripts/run_minimal_backtest.py
+- src/stock_selector/backtest/README.md
+- src/stock_selector/backtest/engine.py
+- src/stock_selector/features/README.md
+- src/stock_selector/reports/backtest_report.py
+- tests/test_minimal_backtest.py
 
 未跟踪文件：
-- 无
+- Agent-Memory/01-轮次记录/TASK-20260612-001/ROUND-008/ROUND.md
+- Agent-Memory/01-轮次记录/TASK-20260612-001/ROUND-008/test_results.json
+- Agent-Memory/01-轮次记录/TASK-20260612-001/ROUND-008/workspace_manifest.json
+- src/stock_selector/backtest/execution.py
+- src/stock_selector/features/historical_factors.py
 
 ## C. 用户验证
 
 - 用户验证状态：not_run
 - 当前不得标记 `L4_USER_VERIFIED` 或 `L5_CLOSED`。
-- 下一步建议：任务完成、测试通过且工作区无明显异常后，可由 Codex 在当前分支 Commit 并 Push；同步前不得标记 L5。
+- 下一步建议：检查自动验证和真实样例结果；若通过且工作区无明显异常，可在当前分支 Commit 并 Push。
 
 ## 建议检查区域
 
 - `Agent-Memory/MEMORY_STATUS.json`
 - `Agent-Memory/00-当前状态/`
-- `Agent-Memory/01-轮次记录/TASK-20260612-001/ROUND-007/`
+- `Agent-Memory/01-轮次记录/TASK-20260612-001/ROUND-008/`
 - `scripts/`
 - `tests/test_memory_tools.py`

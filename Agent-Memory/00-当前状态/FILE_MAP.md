@@ -6,17 +6,19 @@
 - `src/stock_selector/data/eastmoney_history.py`：东财 `push2his` 历史日 K，支持前复权/后复权/不复权和本地缓存；本轮真实运行中断连，保留为可选源。
 - `src/stock_selector/data/tencent_history.py`：腾讯前复权日 K 历史源，当前默认股票历史源；成交额由成交量和收盘价派生，换手率缺失。
 - `src/stock_selector/data/yahoo_history.py`：Yahoo Finance 指数日线，当前作为沪深 300 基准回退源。
-- `src/stock_selector/screening/momentum_liquidity.py`：第一条规则筛选链，负责过滤、打分、排序和缺失因子动态权重。
-- `src/stock_selector/backtest/engine.py`：最小横截面选股回测引擎，处理信号日、成交日、持仓期、换手、成本、滑点和基准对齐。
+- `src/stock_selector/screening/momentum_liquidity.py`：实时快照规则筛选链，负责过滤、打分、排序和缺失因子动态权重；不再作为历史验证策略复用。
+- `src/stock_selector/features/historical_factors.py`：固定历史策略 `historical_ohlcv_v1` 的 OHLCV 因子定义、信号日截断计算、横截面百分位标准化和候选排序。
+- `src/stock_selector/backtest/execution.py`：日线级执行近似，处理下一开盘/下一收盘、无量、缺价、涨停难买、跌停难卖和延迟退出。
+- `src/stock_selector/backtest/engine.py`：可信横截面回测引擎，处理 point-in-time 信号、组合形成、基线比较、换手、成本、现金权重和审计字段。
 - `src/stock_selector/backtest/metrics.py`：集中计算收益、风险、胜率、换手和相对基准指标。
 - `src/stock_selector/reports/screen_report.py`：生成原始行情 CSV、候选 CSV、摘要 JSON 和 HTML 报告。
-- `src/stock_selector/reports/backtest_report.py`：生成回测 HTML、summary JSON、periods/holdings/failures/universe CSV。
+- `src/stock_selector/reports/backtest_report.py`：生成可信回测 HTML、summary JSON、periods/holdings/failures/universe CSV，包含策略身份、因子覆盖、执行阻断、基线和偏差审计。
 - `scripts/run_real_a_share_screen.py`：真实 A 股行情选股闭环 CLI。
-- `scripts/run_minimal_backtest.py`：真实历史行情最小回测 CLI。
+- `scripts/run_minimal_backtest.py`：真实历史行情可信回测 CLI；默认 `broad_current_listed` 股票池，不使用当天候选 CSV 或今天成交额过滤过去。
 - `tests/test_a_share_screen.py`：行情字段映射、筛选规则和报告输出单元测试。
-- `tests/test_minimal_backtest.py`：公共模型、历史源映射、复权缓存、日期错位、防未来函数、交易成本、收益/回撤、缺失因子权重、失败不中断、报告生成、缓存命中、异常数据和基准对齐测试。
+- `tests/test_minimal_backtest.py`：公共模型、历史源映射、复权缓存、实时缺失因子、point-in-time 历史因子、默认非 CSV 股票池、窗口不足、下一开盘执行、无量/涨跌停约束、交易成本、收益/回撤、失败不中断、报告审计、异常数据和基准对齐测试。
 - `docs/a_share_screen_usage.md`：真实行情筛选链使用说明。
-- `docs/minimal_backtest_usage.md`：真实历史回测命令、数据源、输出、真实样例和偏差说明。
+- `docs/minimal_backtest_usage.md`：可信历史验证命令、默认股票池、历史因子、调试模式、输出、ROUND-008 真实样例和 ROUND-007 工程样例降级说明。
 - `src/stock_selector/case_library/`：真实历史股票案卷库 V0.1 的导入器、监控器与本地网页工作台。
 - `scripts/import_legacy_cases.py`：只读导入旧 L.Lawlight 历史案卷并生成 SQLite/报告。
 - `scripts/serve_case_library.py`：启动历史案卷库本地网页工作台。
@@ -29,5 +31,5 @@
 - `docs/`：架构、工作流、设计问题和业务链使用说明。
 - `scripts/`：闭环自动化脚本和业务 CLI。
 - `tests/`：unittest 测试入口。
-- 当前结构疑点：最小回测已跑通，但股票池仍有幸存者偏差，腾讯历史源字段不完整，停牌/涨跌停可成交性尚未精细处理。
-- GPT 建议优先检查区域：`scripts/run_minimal_backtest.py`、`src/stock_selector/backtest/`、`src/stock_selector/data/*history.py`、`outputs/minimal_backtest/latest.html`、`Agent-Memory/01-轮次记录/TASK-20260612-001/ROUND-007/`。
+- 当前结构疑点：可信回测链路已跑通，但默认股票池仍是当前仍上市代码池过渡方案，腾讯历史源字段不完整，日线停牌/涨跌停可成交性仍是近似。
+- GPT 建议优先检查区域：`src/stock_selector/features/historical_factors.py`、`src/stock_selector/backtest/execution.py`、`src/stock_selector/backtest/engine.py`、`scripts/run_minimal_backtest.py`、`outputs/minimal_backtest/latest.html`、`Agent-Memory/01-轮次记录/TASK-20260612-001/ROUND-008/`。
