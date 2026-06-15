@@ -202,10 +202,11 @@ data/interim/*
 !data/interim/.gitkeep
 data/processed/*
 !data/processed/.gitkeep
+data/cache/*
+!data/cache/.gitkeep
 *.tmp
 *.temp
 *.bak
 *.swp
 .vscode/
 .idea/
-

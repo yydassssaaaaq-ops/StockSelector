@@ -1,21 +1,33 @@
 # FILE_MAP
 
+- `src/stock_selector/data/models.py`：中立行情数据模型，包含快照 quote、历史日线 bar、历史序列和失败记录。
 - `src/stock_selector/data/eastmoney.py`：东财 push2 A 股行情快照采集器，可提供主力资金字段但接口可能波动。
 - `src/stock_selector/data/sina.py`：新浪市场中心 `hs_a` 行情快照采集器，当前默认稳定源。
-- `src/stock_selector/screening/momentum_liquidity.py`：第一条规则筛选链，负责过滤、打分、排序。
+- `src/stock_selector/data/eastmoney_history.py`：东财 `push2his` 历史日 K，支持前复权/后复权/不复权和本地缓存；本轮真实运行中断连，保留为可选源。
+- `src/stock_selector/data/tencent_history.py`：腾讯前复权日 K 历史源，当前默认股票历史源；成交额由成交量和收盘价派生，换手率缺失。
+- `src/stock_selector/data/yahoo_history.py`：Yahoo Finance 指数日线，当前作为沪深 300 基准回退源。
+- `src/stock_selector/screening/momentum_liquidity.py`：第一条规则筛选链，负责过滤、打分、排序和缺失因子动态权重。
+- `src/stock_selector/backtest/engine.py`：最小横截面选股回测引擎，处理信号日、成交日、持仓期、换手、成本、滑点和基准对齐。
+- `src/stock_selector/backtest/metrics.py`：集中计算收益、风险、胜率、换手和相对基准指标。
 - `src/stock_selector/reports/screen_report.py`：生成原始行情 CSV、候选 CSV、摘要 JSON 和 HTML 报告。
+- `src/stock_selector/reports/backtest_report.py`：生成回测 HTML、summary JSON、periods/holdings/failures/universe CSV。
 - `scripts/run_real_a_share_screen.py`：真实 A 股行情选股闭环 CLI。
+- `scripts/run_minimal_backtest.py`：真实历史行情最小回测 CLI。
 - `tests/test_a_share_screen.py`：行情字段映射、筛选规则和报告输出单元测试。
+- `tests/test_minimal_backtest.py`：公共模型、历史源映射、复权缓存、日期错位、防未来函数、交易成本、收益/回撤、缺失因子权重、失败不中断、报告生成、缓存命中、异常数据和基准对齐测试。
 - `docs/a_share_screen_usage.md`：真实行情筛选链使用说明。
+- `docs/minimal_backtest_usage.md`：真实历史回测命令、数据源、输出、真实样例和偏差说明。
 - `src/stock_selector/case_library/`：真实历史股票案卷库 V0.1 的导入器、监控器与本地网页工作台。
 - `scripts/import_legacy_cases.py`：只读导入旧 L.Lawlight 历史案卷并生成 SQLite/报告。
 - `scripts/serve_case_library.py`：启动历史案卷库本地网页工作台。
 - `data/processed/case_library.sqlite3`：本地生成的真实案卷索引数据库，按 `.gitignore` 不提交。
 - `outputs/a_share_screen/`：本地生成的真实行情筛选报告，按 `.gitignore` 不提交。
+- `outputs/minimal_backtest/`：本地生成的真实回测报告，按 `.gitignore` 不提交。
 - `data/raw/a_share_quotes/`：本地生成的原始行情快照，按 `.gitignore` 不提交。
+- `data/cache/historical_quotes/`：本地历史行情缓存，按 `.gitignore` 不提交。
 - `Agent-Memory/`：项目记忆、状态和轮次记录。
 - `docs/`：架构、工作流、设计问题和业务链使用说明。
 - `scripts/`：闭环自动化脚本和业务 CLI。
 - `tests/`：unittest 测试入口。
-- 当前结构疑点：筛选链已跑通真实行情，但尚缺历史回测、复权行情和行业/财务因子验证。
-- GPT 建议优先检查区域：`scripts/run_real_a_share_screen.py`、`src/stock_selector/data/`、`src/stock_selector/screening/`、`outputs/a_share_screen/latest.html`、`Agent-Memory/01-轮次记录/TASK-20260612-001/ROUND-006/`。
+- 当前结构疑点：最小回测已跑通，但股票池仍有幸存者偏差，腾讯历史源字段不完整，停牌/涨跌停可成交性尚未精细处理。
+- GPT 建议优先检查区域：`scripts/run_minimal_backtest.py`、`src/stock_selector/backtest/`、`src/stock_selector/data/*history.py`、`outputs/minimal_backtest/latest.html`、`Agent-Memory/01-轮次记录/TASK-20260612-001/ROUND-007/`。

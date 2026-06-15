@@ -1,0 +1,32 @@
+[
+  {
+    "command": "python -m py_compile src\\stock_selector\\data\\models.py src\\stock_selector\\data\\eastmoney.py src\\stock_selector\\data\\sina.py src\\stock_selector\\data\\eastmoney_history.py src\\stock_selector\\screening\\momentum_liquidity.py src\\stock_selector\\backtest\\metrics.py src\\stock_selector\\backtest\\engine.py src\\stock_selector\\reports\\backtest_report.py scripts\\run_minimal_backtest.py",
+    "exit_code": 0,
+    "result": "通过"
+  },
+  {
+    "command": "python -m unittest tests.test_minimal_backtest -v",
+    "exit_code": 0,
+    "result": "9 项通过"
+  },
+  {
+    "command": "python -m unittest discover -s tests -v",
+    "exit_code": 0,
+    "result": "56 项通过"
+  },
+  {
+    "command": "python -u scripts\\run_minimal_backtest.py --start-date 2026-01-01 --end-date 2026-06-15 --top-n 10 --rebalance-frequency weekly --transaction-cost 0.001 --slippage 0.0005 --data-source tencent --universe-source csv --universe-csv outputs\\a_share_screen\\20260615_164853_sina_snapshot\\candidates.csv --universe-limit 20 --adjustment qfq --timeout 20 --retries 3",
+    "exit_code": 0,
+    "result": "真实历史行情回测跑通，生成 20260615_181558_minimal_backtest HTML/JSON/CSV 报告"
+  },
+  {
+    "command": "python scripts\\run_minimal_backtest.py --start-date 2025-12-01 --end-date 2026-06-15 --top-n 10 --rebalance-frequency weekly --transaction-cost 0.001 --slippage 0.0005 --universe-source sina --universe-limit 60 --universe-min-amount 800000000 --adjustment qfq --timeout 20",
+    "exit_code": 1,
+    "result": "东财沪深 300 基准请求 RemoteDisconnected；已诊断并加入基准回退"
+  },
+  {
+    "command": "python scripts\\run_minimal_backtest.py --start-date 2025-12-01 --end-date 2026-06-15 --top-n 10 --rebalance-frequency weekly --transaction-cost 0.001 --slippage 0.0005 --universe-source sina --universe-limit 60 --universe-min-amount 800000000 --adjustment qfq --timeout 20 --retries 3",
+    "exit_code": 124,
+    "result": "工具 180 秒超时；已收缩真实验收样本并改用可复现 CSV 股票池"
+  }
+]

@@ -4,9 +4,10 @@ import json
 import time
 import urllib.parse
 import urllib.request
-from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
 from typing import Any
+
+from stock_selector.data.models import AShareQuote
 
 
 EASTMONEY_QUOTE_URL = "https://push2.eastmoney.com/api/qt/clist/get"
@@ -37,35 +38,6 @@ DEFAULT_FS = "m:0+t:6,m:0+t:80,m:1+t:2,m:1+t:23"
 
 class EastmoneyDataError(RuntimeError):
     """Raised when the Eastmoney snapshot endpoint is unavailable or malformed."""
-
-
-@dataclass(frozen=True)
-class AShareQuote:
-    code: str
-    name: str
-    exchange: str
-    board: str
-    latest_price: float | None
-    pct_change: float | None
-    volume: int | None
-    amount: float | None
-    amplitude: float | None
-    turnover_rate: float | None
-    pe_ttm: float | None
-    volume_ratio: float | None
-    high: float | None
-    low: float | None
-    open: float | None
-    previous_close: float | None
-    total_market_cap: float | None
-    float_market_cap: float | None
-    pb: float | None
-    main_net_inflow: float | None
-    main_net_inflow_pct: float | None
-    quote_time: str | None
-
-    def as_dict(self) -> dict[str, Any]:
-        return asdict(self)
 
 
 def to_float(value: Any) -> float | None:

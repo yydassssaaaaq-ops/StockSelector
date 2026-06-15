@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from stock_selector.data.eastmoney import AShareQuote
+from stock_selector.data.models import AShareQuote
 from stock_selector.screening.momentum_liquidity import ScreenResult
 
 

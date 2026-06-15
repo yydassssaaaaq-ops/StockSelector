@@ -8,12 +8,12 @@ from datetime import datetime
 from typing import Any
 
 from stock_selector.data.eastmoney import (
-    AShareQuote,
     classify_board,
     classify_exchange,
     to_float,
     to_int,
 )
+from stock_selector.data.models import AShareQuote
 
 
 SINA_MARKET_CENTER_URL = "https://vip.stock.finance.sina.com.cn/quotes_service/api/json_v2.php/Market_Center.getHQNodeData"
