@@ -1,3 +1,6 @@
 # reports
 
-当前仅保留暂定职责边界，不确定具体业务路线。相关业务事实均为待确认。
+当前包含真实行情筛选报告输出：
+
+- `screen_report.py`：生成原始行情 CSV、候选 CSV、摘要 JSON 和 HTML 报告。
+- 最新报告默认写入 `outputs/a_share_screen/latest.html`。

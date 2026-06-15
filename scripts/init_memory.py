@@ -485,10 +485,10 @@ def brief(text: str, n: int = 24) -> str:
 def next_step(status: dict) -> str:
     execution = status.get("execution_status")
     if execution == "waiting_github_sync":
-        return "用户在 GitHub Desktop 中检查改动，确认后 Commit 并 Publish/Push；同步前不得标记 L5。"
+        return "任务完成、测试通过且工作区无明显异常后，可由 Codex 在当前分支 Commit 并 Push；同步前不得标记 L5。"
     if execution == "waiting_user_reverification":
         return "用户重新双击验证 BAT 辅助入口，通过后再进入 GitHub 同步阶段。"
-    return "用户检查自动验证结果，确认后再决定是否进入 GitHub 外循环。"
+    return "检查自动验证和真实样例结果；若通过且工作区无明显异常，可在当前分支 Commit 并 Push。"
 
 
 def verification_guard(status: dict) -> str:
@@ -764,10 +764,10 @@ from memory_common import format_user_verification, load_status, observed_head_c
 def next_step(status: dict) -> str:
     execution = status.get("execution_status")
     if execution == "waiting_github_sync":
-        return "用户在 GitHub Desktop 中检查改动，确认后 Commit 并 Publish/Push；同步前不得标记 L5。"
+        return "任务完成、测试通过且工作区无明显异常后，可由 Codex 在当前分支 Commit 并 Push；同步前不得标记 L5。"
     if execution == "waiting_user_reverification":
         return "用户重新双击验证 BAT 辅助入口，通过后再进入 GitHub 同步阶段。"
-    return "用户检查自动验证结果，确认后再决定是否进入 GitHub 外循环。"
+    return "检查自动验证和真实样例结果；若通过且工作区无明显异常，可在当前分支 Commit 并 Push。"
 
 
 def main() -> int:
@@ -872,8 +872,8 @@ tracked 修改：
 - 初始工作区是否干净：{data.get('start_workspace_clean')}
 - 结束工作区是否干净：{data.get('end_workspace_clean')}
 - workspace_manifest.json：`Agent-Memory/01-轮次记录/{status.get('current_task')}/{status.get('current_round')}/workspace_manifest.json`
-- 是否 Commit：否
-- 是否 Push：否
+- 是否 Commit：`finish_round.py` 不执行 Git 操作；任务完成、测试通过且工作区无明显异常后可另行记录真实 Commit。
+- 是否 Push：`finish_round.py` 不执行 Git 操作；Push 结果以本轮最终记录为准。
 - 是否切换分支：否
 
 ## 测试命令
@@ -898,7 +898,7 @@ tracked 修改：
 
 ## 下一步
 
-用户检查本轮文件、状态和测试输出后，再决定是否进入 GitHub 外循环、是否提交以及下一阶段业务事实确认。
+检查本轮文件、状态和测试输出；若通过且工作区无明显异常，可在当前分支 Commit 并 Push。
 """.strip() + "\n"
         write_text(round_dir / "ROUND.md", round_md, root)
         state_dir = root / "Agent-Memory" / "00-当前状态"
@@ -912,9 +912,9 @@ tracked 修改：
 - 当前卡点：{'无，待用户检查和 GPT 审查。' if all_passed else '自动测试未全部通过。'}
 - 已完成：工程壳、Agent-Memory、自动化脚本、测试和 ROUND-001 记录。
 - 未完成：用户真实验证、GitHub 外循环、业务事实确认、真实选股能力开发。
-- 下一步：用户检查本轮结果，并确认是否进入 GitHub 外循环。
+- 下一步：检查本轮结果；若通过且工作区无明显异常，可在当前分支 Commit 并 Push。
 - 关联 ROUND：{status.get('current_round')}
-- 是否需要 GitHub 外循环：待用户确认
+- 是否需要 GitHub 外循环：测试通过且工作区无明显异常后可执行
 """, root)
         write_text(state_dir / "CURRENT_STATE.md", f"""# CURRENT_STATE
 
@@ -1315,9 +1315,9 @@ def main() -> int:
             ".env.example": "# 仅保留变量名和空值示例，不写入真实密钥。\nSTOCK_SELECTOR_DATA_SOURCE=\nSTOCK_SELECTOR_API_KEY=\nSTOCK_SELECTOR_OUTPUT_DIR=\n",
             "pyproject.toml": "[project]\nname = \"stock-selector\"\nversion = \"0.1.0\"\ndescription = \"A neutral engineering shell for an A-share intelligent stock selection system.\"\nreadme = \"README.md\"\nrequires-python = \">=3.10\"\ndependencies = []\n",
             "README.md": "# StockSelector\n\nStockSelector 是一个面向 A 股智能选股系统的工程仓库。当前阶段只建立 Agent 项目闭环基础设施和中性工程目录壳，尚没有真实选股、回测、交易或报告生成能力。\n\n## 常用命令\n\n```powershell\npython scripts/project_status.py\npython scripts/build_gpt_context.py\npython scripts/build_index.py\npython scripts/validate_memory.py\npython -m unittest discover -s tests -v\n```\n\n当前业务事实如数据源、复权方案、股票池、指标、模型、交易周期和输出规则均为待确认。\n",
-            "AGENTS.md": "# AGENTS.md\n\n## 开始任务前\n\n1. 阅读 `Agent-Memory/INDEX.md`。\n2. 阅读 `Agent-Memory/03-GPT导出/GPT_CONTEXT.md`、`Agent-Memory/00-当前状态/CURRENT_TASK.md`、`Agent-Memory/00-当前状态/CURRENT_STATE.md`。\n3. 阅读 `Agent-Memory/MEMORY_STATUS.json`。\n4. 获取当前工作目录、真实 Git 分支和起始 commit。\n5. 检查是否存在旧的未提交修改。\n6. 不得把旧轮次修改混入本轮而不说明。\n\n## 执行任务时\n\n1. 可以检查和修改与当前任务有关的仓库文件。\n2. 不得把推测写成已确认事实。\n3. 测试失败必须如实记录。\n4. 用户真实运行结果优先于自动测试。\n5. 不读取、不记录、不提交真实密钥。\n6. 不自动 Commit。\n7. 不自动 Push。\n8. 不擅自创建或切换分支。\n9. `MEMORY_STATUS.json` 是机器状态唯一权威来源。\n10. 不为填满模板而编造内容。\n\n## 结束任务前\n\n1. 新建或更新本轮 `ROUND.md`。\n2. 更新每轮必更新文件。\n3. 仅在事实变化时更新 `FILE_MAP.md`、`ENVIRONMENT.md`、`USAGE.md`、`PROJECT.md`。\n4. 更新 `MEMORY_STATUS.json`。\n5. 重新生成 `GPT_CONTEXT.md`。\n6. 重新生成 `INDEX.md`。\n7. 运行 `validate_memory.py`。\n8. 明确当前验证等级。\n9. 未经用户真实验证，不得标记 L4 或 L5。\n10. 停止，不自动 Commit，不自动 Push。\n",
+            "AGENTS.md": "# AGENTS.md\n\n## 开始任务前\n\n1. 阅读 `Agent-Memory/INDEX.md`。\n2. 阅读 `Agent-Memory/03-GPT导出/GPT_CONTEXT.md`、`Agent-Memory/00-当前状态/CURRENT_TASK.md`、`Agent-Memory/00-当前状态/CURRENT_STATE.md`。\n3. 阅读 `Agent-Memory/MEMORY_STATUS.json`。\n4. 获取当前工作目录、真实 Git 分支和起始 commit。\n5. 检查是否存在旧的未提交修改。\n6. 不得把旧轮次修改混入本轮而不说明。\n\n## 执行任务时\n\n1. 可以检查和修改与当前任务有关的仓库文件。\n2. 不得把推测写成已确认事实。\n3. 测试失败必须如实记录。\n4. 用户真实运行结果优先于自动测试。\n5. 不读取、不记录、不提交真实密钥。\n6. 任务完成、测试通过且工作区内容确认无明显异常后，允许在当前分支执行 `git add`、Commit 和 Push。\n7. 不使用 force push，不删除或覆盖已有历史；Git 操作失败必须如实记录并保留现场。\n8. 不擅自创建或切换分支。\n9. `MEMORY_STATUS.json` 是机器状态唯一权威来源。\n10. 不为填满模板而编造内容。\n\n## 结束任务前\n\n1. 新建或更新本轮 `ROUND.md`。\n2. 更新每轮必更新文件。\n3. 仅在事实变化时更新 `FILE_MAP.md`、`ENVIRONMENT.md`、`USAGE.md`、`PROJECT.md`。\n4. 更新 `MEMORY_STATUS.json`。\n5. 重新生成 `GPT_CONTEXT.md`。\n6. 重新生成 `INDEX.md`。\n7. 运行 `validate_memory.py`。\n8. 明确当前验证等级。\n9. 未经用户真实验证，不得标记 L4 或 L5。\n10. 若测试通过且工作区内容确认无明显异常，可在当前分支正常 Commit 并 Push 到当前远程分支；不得 force push。\n",
             "docs/ARCHITECTURE.md": "# 架构说明\n\n当前仓库是中性的工程壳。各业务模块职责只是暂定边界，不代表数据源、指标、算法、模型或存储方案已经确定。\n",
-            "docs/DEVELOPMENT_WORKFLOW.md": "# 开发工作流\n\n本地内循环：阅读 Agent-Memory，修改相关文件，运行生成、验证、状态和 unittest 命令，使用 `finish_round.py` 记录结果。\n\nGitHub 外循环需用户确认。Codex 不自动 `git add`、Commit、Push、Pull、Merge、Rebase，也不自动创建或切换分支。\n\n验证等级：`L0_PLANNED`、`L1_CHANGED`、`L2_AGENT_TESTED`、`L4_USER_VERIFIED`、`L5_CLOSED`。用户未验证时不得标记 L4 或 L5。\n",
+            "docs/DEVELOPMENT_WORKFLOW.md": "# 开发工作流\n\n本地内循环：阅读 Agent-Memory，修改相关文件，运行真实样例、生成、验证、状态和 unittest 命令，并记录 ROUND 结果。\n\nGitHub 外循环：任务完成、测试通过且工作区内容确认无明显异常后，Codex 可在当前分支执行 `git add`、Commit 和 Push 到当前远程分支；不创建或切换分支，不使用 force push，不删除或覆盖已有历史。Push 被拒绝或测试失败时必须如实记录并保留现场。\n\n验证等级：`L0_PLANNED`、`L1_CHANGED`、`L2_AGENT_TESTED`、`L4_USER_VERIFIED`、`L5_CLOSED`。用户未验证时不得标记 L4 或 L5。\n",
             "docs/DESIGN_QUESTIONS.md": "# 下一阶段设计问题\n\n- 系统选股目标是什么。\n- 选股周期是什么。\n- 股票池范围是什么。\n- 数据源如何选择。\n- 复权方式如何选择。\n- 如何定义特征和指标。\n- 如何避免未来函数。\n- 如何避免数据泄漏。\n- 回测目标是什么。\n- Agent 承担什么职责。\n- 最终输出形式是什么。\n- 用户如何验收结果。\n",
             "config/README.md": "# config\n\n仅保存非敏感配置样例和待确认配置说明，不写入真实密钥。\n",
             "data/README.md": "# data\n\n数据目录用于未来放置原始数据、中间数据和处理后数据说明。当前数据源、复权方案和股票池均待确认。\n",
@@ -1325,7 +1325,7 @@ def main() -> int:
             "logs/README.md": "# logs\n\n日志目录用于未来保存本地运行日志，日志不得包含真实密钥或账号凭证。\n",
             "Agent-Memory/02-阶段快照/README.md": "# 阶段快照\n\n当前尚未创建正式 CHECKPOINT。\n",
             "scripts/templates/TASK.template.md": "# TASK ID\n\n- 任务名称：待确认\n- 目标：待确认\n- 背景：待确认\n- 已知事实：待确认\n- 待确认事项：待确认\n- 完成标准：待确认\n- 当前验证等级：L0_PLANNED\n- 关联 ROUND：待确认\n- GitHub 外循环要求：待确认\n- 风险：待确认\n",
-            "scripts/templates/ROUND.template.md": "# ROUND ID\n\n- TASK ID：待确认\n- ROUND ID：待确认\n- 触发来源：待确认\n- 用户原始目标：待确认\n- 本轮目标：待确认\n- GPT 分析：待确认\n- Codex 实际修改：待确认\n- 修改文件：待确认\n- Git 状态锚点：待确认\n- 工作区清单：待确认\n- 测试命令：待确认\n- 预期结果：待确认\n- 实际结果：待确认\n- 退出码：待确认\n- 当前验证等级：待确认\n- 用户验证状态：not_run\n- 风险与回滚：待确认\n- 当前结论：待确认\n- 下一步：待确认\n- 是否进入 GitHub 外循环：待确认\n- 是否 Commit：否\n- 是否 Push：否\n",
+            "scripts/templates/ROUND.template.md": "# ROUND ID\n\n- TASK ID：待确认\n- ROUND ID：待确认\n- 触发来源：待确认\n- 用户原始目标：待确认\n- 本轮目标：待确认\n- GPT 分析：待确认\n- Codex 实际修改：待确认\n- 修改文件：待确认\n- Git 状态锚点：待确认\n- 工作区清单：待确认\n- 测试命令：待确认\n- 预期结果：待确认\n- 实际结果：待确认\n- 退出码：待确认\n- 当前验证等级：待确认\n- 用户验证状态：not_run\n- 风险与回滚：待确认\n- 当前结论：待确认\n- 下一步：待确认\n- 是否进入 GitHub 外循环：待记录\n- 是否 Commit：待记录\n- 是否 Push：待记录\n",
             "scripts/templates/ISSUE.template.md": "# ISSUE ID\n\n- 标题：待确认\n- 类型：待确认\n- 首次出现 ROUND：待确认\n- 状态：open\n- 现象：待确认\n- 影响范围：待确认\n- 当前判断：待确认\n- 下一步：待确认\n- 关联源码：待确认\n- 是否阻塞：待确认\n",
             "scripts/templates/CHECKPOINT.template.md": "# CHECKPOINT ID\n\n- 覆盖 TASK：待确认\n- 覆盖 ROUND：待确认\n- 阶段目标：待确认\n- 已完成内容：待确认\n- 已解决问题：待确认\n- 未解决问题：待确认\n- 放弃方向：待确认\n- 当前项目状态：待确认\n- 重要技术决策：待确认\n- 最近稳定 commit：待确认\n- 当前验证等级：待确认\n- 下一阶段起点：待确认\n",
         }
@@ -1351,11 +1351,11 @@ def main() -> int:
             "round_started_at": started, "start_workspace_clean": True,
         }
         atomic_json(root / "Agent-Memory" / "MEMORY_STATUS.json", status)
-        safe_write(root, f"Agent-Memory/01-轮次记录/{TASK_ID}/TASK.md", f"# {TASK_ID}\n\n- 任务名称：{TASK_NAME}\n- 目标：建立 Agent-Memory、闭环脚本、工程目录壳、Git 状态锚点和第一轮记录。\n- 背景：仓库处于初始阶段，当前不开发具体选股算法。\n- 已知事实：项目英文名 StockSelector，中文名 A股智能选股系统。\n- 待确认事项：数据源、复权方案、股票池、指标、筛选规则、回测框架、模型类型、Agent 决策方式、数据库、实盘接口、交易周期、输出排序规则。\n- 完成标准：规定脚本可运行，自动测试通过，状态文件一致，ROUND-001 如实记录。\n- 当前验证等级：L1_CHANGED\n- 关联 ROUND：{ROUND_ID}\n- GitHub 外循环要求：待用户确认，不自动 Commit，不自动 Push。\n- 风险：用户尚未真实验证，最高只能达到 L2_AGENT_TESTED。\n", True)
+        safe_write(root, f"Agent-Memory/01-轮次记录/{TASK_ID}/TASK.md", f"# {TASK_ID}\n\n- 任务名称：{TASK_NAME}\n- 目标：建立 Agent-Memory、闭环脚本、工程目录壳、Git 状态锚点和第一轮记录。\n- 背景：仓库处于初始阶段，当前不开发具体选股算法。\n- 已知事实：项目英文名 StockSelector，中文名 A股智能选股系统。\n- 待确认事项：数据源、复权方案、股票池、指标、筛选规则、回测框架、模型类型、Agent 决策方式、数据库、实盘接口、交易周期、输出排序规则。\n- 完成标准：规定脚本可运行，自动测试通过，状态文件一致，ROUND-001 如实记录。\n- 当前验证等级：L1_CHANGED\n- 关联 ROUND：{ROUND_ID}\n- GitHub 外循环要求：任务完成、测试通过且工作区无明显异常后，可在当前分支 Commit 并 Push；不得 force push。\n- 风险：用户尚未真实验证，最高只能达到 L2_AGENT_TESTED。\n", True)
         safe_write(root, f"Agent-Memory/01-轮次记录/{TASK_ID}/{ROUND_ID}/ROUND.md", f"# {ROUND_ID}\n\n- 所属 TASK：{TASK_ID}\n- ROUND ID：{ROUND_ID}\n- 触发来源：用户初始化指令文件 `Codex初始化指令-StockSelector-V4.1.txt`\n- 用户目标：建立 Agent 项目闭环系统 V4.1 执行增强版和选股系统工程壳。\n- 本轮目标：创建文件、脚本、状态、测试并完成第一轮闭环记录。\n- 起始时间：{started}\n- 当前真实分支：{branch}\n- 开始 HEAD：{head}\n- 初始工作区状态：开始前已检查为干净。\n- 当前状态：文件已创建，等待自动化验证和最终收尾。\n", True)
         state_docs = {
-            "PROJECT.md": "# PROJECT\n\n- 项目名称：StockSelector / A股智能选股系统\n- 项目定位：面向后续 A 股智能选股系统开发的工程仓库。\n- 核心目的：建立可持续迭代、可记录、可验证的项目闭环基础设施。\n- 当前主线：先建立 Agent-Memory 和工程壳，再由用户确认业务事实。\n- 当前阶段：闭环基础设施初始化。\n- 已确认事实：项目英文名、中文名、当前任务和当前不开发具体选股算法。\n- 待确认事项：数据源、复权方案、股票池、指标、筛选规则、回测框架、模型类型、Agent 决策方式、数据库、实盘接口、交易周期、输出排序规则。\n- 长期有效原则：不把推测写成事实，不写入真实密钥，不自动 Commit 或 Push。\n",
-            "CURRENT_TASK.md": f"# CURRENT_TASK\n\n- 当前 TASK：{TASK_ID}\n- 任务名称：{TASK_NAME}\n- 当前状态：infrastructure_initializing\n- 当前验证等级：L1_CHANGED\n- 用户验证状态：not_run\n- 当前卡点：自动化测试尚未全部执行。\n- 已完成：初始状态文档正在建立。\n- 未完成：测试、最终 ROUND 记录、用户验证、GitHub 外循环。\n- 下一步：运行生成、验证、状态和 unittest 命令。\n- 关联 ROUND：{ROUND_ID}\n- 是否需要 GitHub 外循环：待用户确认\n",
+            "PROJECT.md": "# PROJECT\n\n- 项目名称：StockSelector / A股智能选股系统\n- 项目定位：面向后续 A 股智能选股系统开发的工程仓库。\n- 核心目的：建立可持续迭代、可记录、可验证的项目闭环基础设施。\n- 当前主线：先建立 Agent-Memory 和工程壳，再由用户确认业务事实。\n- 当前阶段：闭环基础设施初始化。\n- 已确认事实：项目英文名、中文名、当前任务和当前不开发具体选股算法。\n- 待确认事项：数据源、复权方案、股票池、指标、筛选规则、回测框架、模型类型、Agent 决策方式、数据库、实盘接口、交易周期、输出排序规则。\n- 长期有效原则：不把推测写成事实，不写入真实密钥；任务完成、测试通过且工作区无明显异常后，可在当前分支 Commit 并 Push，禁止 force push。\n",
+            "CURRENT_TASK.md": f"# CURRENT_TASK\n\n- 当前 TASK：{TASK_ID}\n- 任务名称：{TASK_NAME}\n- 当前状态：infrastructure_initializing\n- 当前验证等级：L1_CHANGED\n- 用户验证状态：not_run\n- 当前卡点：自动化测试尚未全部执行。\n- 已完成：初始状态文档正在建立。\n- 未完成：测试、最终 ROUND 记录、用户验证、GitHub 外循环。\n- 下一步：运行生成、验证、状态和 unittest 命令；通过后可在当前分支 Commit 并 Push。\n- 关联 ROUND：{ROUND_ID}\n- 是否需要 GitHub 外循环：测试通过且工作区无明显异常后可执行\n",
             "CURRENT_STATE.md": f"# CURRENT_STATE\n\n- 当前阶段：闭环基础设施初始化中。\n- 当前可运行能力：脚本文件已创建，待实际执行验证。\n- 当前正常功能：待验证。\n- 当前尚不存在的业务能力：真实选股、数据采集、股票池、指标、回测、Agent 决策、报告输出、实盘接口。\n- 当前限制：用户尚未真实验证，最高只能达到 L2_AGENT_TESTED。\n- 最近一次测试：待执行。\n- 最近稳定 commit：{head}\n- 当前实验 commit：{head}\n- 下一次优先验证：运行规定自动测试。\n",
             "OPEN_ISSUES.md": "# OPEN_ISSUES\n\n当前无开放问题。\n",
             "FILE_MAP.md": "# FILE_MAP\n\n- `src/stock_selector/`：中性业务模块壳。\n- `scripts/`：闭环自动化脚本。\n- `tests/`：unittest 测试。\n- `Agent-Memory/`：项目记忆、状态和轮次记录。\n- `docs/`：架构、工作流、设计问题。\n- 当前结构疑点：业务路线待确认。\n- GPT 建议优先检查区域：`MEMORY_STATUS.json`、`scripts/`、`tests/test_memory_tools.py`。\n",

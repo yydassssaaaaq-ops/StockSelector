@@ -67,8 +67,8 @@ tracked 修改：
 - 初始工作区是否干净：{data.get('start_workspace_clean')}
 - 结束工作区是否干净：{data.get('end_workspace_clean')}
 - workspace_manifest.json：`Agent-Memory/01-轮次记录/{status.get('current_task')}/{status.get('current_round')}/workspace_manifest.json`
-- 是否 Commit：否
-- 是否 Push：否
+- 是否 Commit：`finish_round.py` 不执行 Git 操作；任务完成、测试通过且工作区无明显异常后可另行记录真实 Commit。
+- 是否 Push：`finish_round.py` 不执行 Git 操作；Push 结果以本轮最终记录为准。
 - 是否切换分支：否
 
 ## 测试命令
@@ -93,7 +93,7 @@ tracked 修改：
 
 ## 下一步
 
-用户检查本轮文件、状态和测试输出后，再决定是否进入 GitHub 外循环、是否提交以及下一阶段业务事实确认。
+检查本轮文件、状态和测试输出；若通过且工作区无明显异常，可在当前分支 Commit 并 Push。
 """.strip() + "\n"
         write_text(round_dir / "ROUND.md", round_md, root)
         state_dir = root / "Agent-Memory" / "00-当前状态"
@@ -107,9 +107,9 @@ tracked 修改：
 - 当前卡点：{'无，待用户检查和 GPT 审查。' if all_passed else '自动测试未全部通过。'}
 - 已完成：工程壳、Agent-Memory、自动化脚本、测试和 ROUND-001 记录。
 - 未完成：用户真实验证、GitHub 外循环、业务事实确认、真实选股能力开发。
-- 下一步：用户检查本轮结果，并确认是否进入 GitHub 外循环。
+- 下一步：检查本轮结果；若通过且工作区无明显异常，可在当前分支 Commit 并 Push。
 - 关联 ROUND：{status.get('current_round')}
-- 是否需要 GitHub 外循环：待用户确认
+- 是否需要 GitHub 外循环：测试通过且工作区无明显异常后可执行
 """, root)
         write_text(state_dir / "CURRENT_STATE.md", f"""# CURRENT_STATE
 

@@ -16,10 +16,10 @@ def brief(text: str, n: int = 24) -> str:
 def next_step(status: dict) -> str:
     execution = status.get("execution_status")
     if execution == "waiting_github_sync":
-        return "用户在 GitHub Desktop 中检查改动，确认后 Commit 并 Publish/Push；同步前不得标记 L5。"
+        return "任务完成、测试通过且工作区无明显异常后，可由 Codex 在当前分支 Commit 并 Push；同步前不得标记 L5。"
     if execution == "waiting_user_reverification":
         return "用户重新双击验证 BAT 辅助入口，通过后再进入 GitHub 同步阶段。"
-    return "用户检查自动验证结果，确认后再决定是否进入 GitHub 外循环。"
+    return "检查自动验证和真实样例结果；若通过且工作区无明显异常，可在当前分支 Commit 并 Push。"
 
 
 def verification_guard(status: dict) -> str:

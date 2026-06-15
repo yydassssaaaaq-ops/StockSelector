@@ -1,14 +1,13 @@
 # CURRENT_STATE
 
-- 当前阶段：真实历史股票案卷库 V0.1 已升级为自动增量监控模式，等待用户复核。
-- 当前可运行能力：只读导入旧 L.Lawlight 历史数据、SQLite 索引、变更路径级增量导入、文件监控、防抖、删除和重命名识别、今日变化页面、股票搜索、案卷详情、案卷对比、诊断中心、数据考古报告、双击启动 BAT。
-- 当前正常命令：`python scripts\import_legacy_cases.py`、`python scripts\serve_case_library.py --open-browser`、`python -m unittest discover -s tests -v`、`python scripts\validate_memory.py`。
-- 当前真实数据：正式导入扫描 `D:\AAAAAAAAA项目\L.Lawlight\1\RadarData` 和 `HumanView`，433 个目录、2430 个文件、9 只股票、19 个案卷、无法解析 0。
-- 当前新增监控状态：本地服务进程已启动于 `http://127.0.0.1:8765/`，`/api/monitor/status` 返回 enabled=true、running=true。
-- 本轮模拟验收：临时旧项目新增 688001 案卷，监控发现 13 个新增文件，538 ms 内进入数据库，自动导入耗时 137 ms，今日变化页显示新增股票 1、新增案卷 1。
-- 当前尚不存在的业务能力：正式选股策略、涨跌预测、回测交易、实盘接口、投资建议。
-- 当前限制：尚未经过用户真实双击验收，因此验证等级保持 `L2_AGENT_TESTED`，不得标记 `L4_USER_VERIFIED` 或 `L5_CLOSED`。
-- Git HEAD 记录语义：当前环境 PowerShell 中 `git` 不在 PATH；`MEMORY_STATUS.json` 里的 HEAD 字段保留最近观察值。
-- 最近一次测试：见 `Agent-Memory/01-轮次记录/TASK-20260612-001/ROUND-005/ROUND.md`。
-- 最近稳定 commit：e3c9faa19704d7ce04ea735a2765fb7e65ff01f2
-- 下一次优先事项：用户双击启动并验收工作台；通过后可进入选股逻辑研讨。
+- 当前阶段：基础设施阶段结束，已进入第一条真实 A 股选股业务闭环建设。
+- 当前可运行能力：真实 A 股行情快照采集、规则筛选打分、候选 CSV、原始行情 CSV、摘要 JSON、HTML 报告；历史案卷库导入、SQLite 索引、文件监控和本地工作台仍保留可用。
+- 当前正常命令：`python scripts\run_real_a_share_screen.py --top 30`、`python scripts\import_legacy_cases.py`、`python scripts\serve_case_library.py --open-browser`、`python -m unittest discover -s tests -v`、`python scripts\validate_memory.py`。
+- 当前真实行情数据：新浪市场中心 `hs_a` 快照，2026-06-15 真实样例读取 5527 条 A 股行情，过滤后 1665 条，输出 Top 30；Top 5 为 000725 京东方Ａ、002185 华天科技、000630 铜陵有色、000021 深科技、000737 北方铜业。
+- 当前真实样例输出：`outputs/a_share_screen/latest.html`、`outputs/a_share_screen/20260615_164853_sina_snapshot/report.html`、`outputs/a_share_screen/20260615_164853_sina_snapshot/candidates.csv`、`outputs/a_share_screen/20260615_164853_sina_snapshot/summary.json`、`data/raw/a_share_quotes/20260615_164853_sina_snapshot_quotes.csv`。
+- 当前规则边界：排除 ST/退市整理和新股前缀样本；要求价格、成交额、换手率、涨跌幅、振幅在阈值内；按动量、流动性、主力资金、估值和波动守门项打分。新浪源不提供主力净流入字段，系统保留空值，不用模拟值补齐。
+- 当前尚不存在的业务能力：历史回测、复权行情、行业中性化、财务因子、组合构建、涨跌预测、实盘交易、投资建议。
+- 当前限制：用户尚未真实查看本轮报告，因此验证等级保持 `L2_AGENT_TESTED`，不得标记 `L4_USER_VERIFIED` 或 `L5_CLOSED`。
+- 最近一次完整测试：`python -m unittest discover -s tests -v`，47 项通过。
+- 最近稳定 commit：a062e3f1c9abc83ccd82356b0df03dc564d13515
+- 下一次优先事项：为这条真实行情筛选链补历史行情/复权数据与最小回测，用收益回放检验筛选规则是否有稳定价值。
